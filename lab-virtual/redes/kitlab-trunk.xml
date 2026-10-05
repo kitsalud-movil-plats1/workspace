@@ -1,0 +1,4 @@
+<network>
+  <name>kitlab-trunk</name>
+  <bridge name='kitlab-trk0' stp='off' delay='0'/>
+</network>
