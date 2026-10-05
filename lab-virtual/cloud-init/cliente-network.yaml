@@ -1,0 +1,18 @@
+# Simula un equipo en un puerto de acceso: el cliente etiqueta su propio tráfico.
+# Por defecto en la VLAN 10 (Interna); para la Comunidad, cambiar id y nombre a 40.
+version: 2
+ethernets:
+  eth0:
+    match:
+      macaddress: "52:54:00:4b:02:01"
+    set-name: eth0
+    dhcp4: false
+    dhcp6: false
+    accept-ra: false
+    link-local: []
+vlans:
+  vlan10:
+    id: 10
+    link: eth0
+    dhcp4: true
+    accept-ra: true

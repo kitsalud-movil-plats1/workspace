@@ -65,3 +65,9 @@ crear_vm kit01 kit01 2048 2 20G kit01-network.yaml \
   --network "network=$PREFIJO-uplink,mac=$MAC_KIT01_WAN,model=virtio" \
   --network "network=$PREFIJO-trunk,mac=$MAC_KIT01_LAN,model=virtio"
 
+crear_vm cliente cliente 1024 1 10G cliente-network.yaml \
+  --network "network=$PREFIJO-trunk,mac=$MAC_CLIENTE,model=virtio"
+
+paso "Listo"
+echo "kit01:   ssh $LAB_USUARIO@$IP_KIT01_WAN"
+echo "cliente: sin IP hasta que kit01 entregue DHCP en la VLAN 10 (luego: ssh -J $LAB_USUARIO@$IP_KIT01_WAN $LAB_USUARIO@<ip>)"
