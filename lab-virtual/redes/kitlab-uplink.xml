@@ -1,0 +1,11 @@
+<network>
+  <name>kitlab-uplink</name>
+  <forward mode='nat'/>
+  <bridge name='kitlab-up0' stp='on' delay='0'/>
+  <ip address='192.168.88.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='192.168.88.10' end='192.168.88.254'/>
+      <host mac='52:54:00:4b:01:01' name='kit01' ip='192.168.88.11'/>
+    </dhcp>
+  </ip>
+</network>
