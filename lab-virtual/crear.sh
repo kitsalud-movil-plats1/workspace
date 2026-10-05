@@ -20,3 +20,20 @@ for red in uplink trunk; do
   v net-autostart "$nombre" >/dev/null
   [ "$(v net-info "$nombre" | awk '/^Active:/{print $2}')" = yes ] || v net-start "$nombre"
 done
+
+# 2. Imagen base (descargada una vez, verificada y subida al pool de libvirt)
+if v vol-info --pool "$POOL" "$VOL_BASE" >/dev/null 2>&1; then
+  echo "Imagen base $VOL_BASE: ya existe"
+else
+  paso "Descargando Ubuntu 24.04 ($UBUNTU_SERIE)"
+  mkdir -p "$DIR/imagenes"
+  cd "$DIR/imagenes"
+  [ -f "$UBUNTU_IMG" ] || curl -fsSL -o "$UBUNTU_IMG" "$UBUNTU_URL/$UBUNTU_IMG"
+  curl -fsSL -o SHA256SUMS "$UBUNTU_URL/SHA256SUMS"
+  grep " \*$UBUNTU_IMG\$" SHA256SUMS | sha256sum -c -
+  cd - >/dev/null
+  paso "Subiendo la imagen al pool $POOL"
+  tam=$(stat -c %s "$DIR/imagenes/$UBUNTU_IMG")
+  v vol-create-as "$POOL" "$VOL_BASE" "$tam" --format qcow2 >/dev/null
+  v vol-upload --pool "$POOL" "$VOL_BASE" "$DIR/imagenes/$UBUNTU_IMG"
+fi
