@@ -1,0 +1,22 @@
+# Repositorios del proyecto: se clonan aquí con scripts/clonar-repos.sh
+/.github/
+/docs/
+/network/
+/platform/
+/apps/
+/observability/
+
+# Notas personales fuera de los repositorios
+/borradores/
+
+# Laboratorio virtual: imágenes y discos
+/lab-virtual/imagenes/
+*.qcow2
+*.img
+*.iso
+
+# Herramientas locales
+/.claude/settings.local.json
+.vscode/
+.idea/
+.DS_Store
