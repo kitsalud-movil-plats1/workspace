@@ -7,8 +7,8 @@ Reproduce la topología de red del kit en una máquina con libvirt, para desarro
 | Laboratorio | Kit real | Detalle |
 |---|---|---|
 | Red `kitlab-uplink` (NAT, `192.168.88.0/24`) | RB3011 (uplink del sitio) | DHCP con reserva `192.168.88.11` para kit01 y salida a Internet por NAT de la máquina anfitriona |
-| Red `kitlab-trunk` (bridge aislado, sin IP) | Cable `lan0` ↔ gi1/0/1 del switch | Transporta tramas 802.1Q sin tocarlas |
-| VM `kitlab-kit01` (2 vCPU, 2 GB, 20 GB) | kit01 recién instalado | Ubuntu Server 24.04, `wan0` por DHCP y `lan0` sin direcciones, nombres fijados por MAC, SSH solo con llave, CPU `host-passthrough` (permite VMs anidadas) |
+| Red `kitlab-trunk` (bridge aislado, sin IP) | Cable `lan0` ↔ ether1 de sw01 (MikroTik CCR2004) | Transporta tramas 802.1Q sin tocarlas |
+| VM `kitlab-kit01` (2 vCPU, 2 GB, 20 GB) | kit01 recién instalado | Ubuntu Server 24.04, `wan0` por DHCP y `lan0` sin direcciones, nombres fijados por MAC, CPU `host-passthrough`. En el laboratorio se entra con la llave del integrante (cloud-init); en el kit real, con el usuario de administración compartido (D-18) (permite VMs anidadas) |
 | VM `kitlab-cliente` (1 vCPU, 1 GB, 10 GB) | Equipo en un puerto de acceso | Etiqueta su propio tráfico en la VLAN 10 y pide DHCPv4 y RA |
 
 Todo lo que crean los scripts lleva el prefijo `kitlab-`. No se modifica nada más de la máquina.
@@ -58,4 +58,4 @@ ssh <usuario>@192.168.88.11 'sudo tcpdump -e -n -c3 -i lan0 vlan'   # tramas "vl
 - **No hay switch ni AP:** el cliente etiqueta su propio tráfico; no se prueban ACL, RA Guard ni SSID.
 - **Memoria:** `clinica01` necesita 7 GB; en el laboratorio solo caben VMs anidadas pequeñas para probar `br-srv` y el firewall entre VMs.
 - **Uplink:** el NAT de libvirt no reproduce la red de la universidad (proxy, bloqueos, NetBird por relay).
-- **Hardware:** nombres de interfaz, controladores y BIOS del MinisForum solo se validan en el equipo real.
+- **Hardware:** nombres de interfaz, controladores y BIOS del Beelink EQi12 solo se validan en el equipo real.
