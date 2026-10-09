@@ -25,3 +25,21 @@ Formato: síntoma → causa → solución. Se agrega una entrada cuando se resue
 - **Síntoma:** al cerrar un issue o fusionar un PR, la tarjeta se queda en In progress o In review.
 - **Causa:** las automatizaciones del proyecto ("Item closed", "Pull request merged") están desactivadas y no se pueden activar por API.
 - **Solución:** activarlas en el proyecto (menú `⋯` → Workflows) o mover la tarjeta a mano.
+
+## La gestión del AP no responde desde la VLAN 10
+
+- **Síntoma:** con el AP en ether2, `ping 10.20.10.3` falla y el ARP queda en `FAILED`, aunque ether2 tiene enlace.
+- **Causa:** la gestión del TL-WA801ND (firmware 3.16.9) recibe tramas etiquetadas en la VLAN del SSID1 pero responde **sin etiqueta**; con `frame-types=admit-only-vlan-tagged`, sw01 descarta las respuestas. Se ve en los contadores de ether2 (`/interface ethernet print stats`): broadcasts enviados y unicast recibidos sin respuesta en kit01.
+- **Solución:** ether2 híbrido: `/interface bridge port set [find interface=ether2-ap01] frame-types=admit-all pvid=10` (la VLAN 10 y la 40 siguen saliendo etiquetadas hacia el AP).
+
+## El sniffer de sw01 no ve el tráfico entre puertos
+
+- **Síntoma:** `/tool sniffer quick interface=ether2-ap01` solo muestra los paquetes de control STP del propio sw01.
+- **Causa:** los puertos del mismo chip (`switch1`) conmutan en hardware; ese tráfico no pasa por la CPU.
+- **Solución:** diagnosticar con los contadores (`/interface ethernet print stats`), la tabla de MAC (`/interface bridge host print`) o capturando en kit01 (`tcpdump -e -i enp171s0`).
+
+## `sudo` por SSH sin terminal pide la contraseña en cada comando
+
+- **Síntoma:** en comandos remotos (`ssh kit01 'sudo ...'`), `sudo` pide la contraseña aunque se haya dado antes.
+- **Causa:** sin terminal, `sudo` no reutiliza la autenticación entre comandos.
+- **Solución:** `sudo -S` leyendo la contraseña de la entrada estándar, o una sola sesión `sudo -S bash -s` con todos los comandos. Para cambios de red, programar antes una restauración (`systemd-run --on-active=...`), como en `AGENTS.md`, sección 6.

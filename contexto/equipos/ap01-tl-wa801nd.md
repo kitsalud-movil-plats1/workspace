@@ -2,7 +2,7 @@
 
 Ficha del punto de acceso del kit. Datos tomados de la etiqueta del equipo y de su interfaz web (firmware real), complementados con el manual de usuario del fabricante. Diseño de referencia: `docs/arquitectura/00-punto-de-partida.md`, secciones 5.2 y 5.3.
 
-**Estado:** verificado, **sin configurar** (valores de fábrica).
+**Estado (2026-10-09):** configurado en la primera sesión según la configuración objetivo y conectado a ether2 de sw01. Gestión verificada desde kit01 en `10.20.10.3`; falta probar clientes en los SSID. Configuración aplicada: `network/ap/README.md`.
 
 ## Identificación
 
@@ -54,7 +54,7 @@ Modos de operación: Access Point, **Multi-SSID**, Client, WDS Repeater, Univers
 
 - Hasta **4 SSID**, cada uno con su **VLAN ID** (1-4094) al activar **Enable VLAN**.
 - Con VLAN activa, todo el tráfico que sale por el puerto LAN va **etiquetado** (802.1Q) con la VLAN del SSID del cliente. No hay un SSID sin etiqueta.
-- **Gestión:** desde la red cableada, solo los equipos de la VLAN del **SSID1** pueden entrar al AP, también con tramas etiquetadas. Un PC conectado directo al AP necesita una interfaz con soporte de etiquetas. Los clientes inalámbricos de cualquier SSID también pueden llegar a la página de gestión (R-12).
+- **Gestión (comprobado en el laboratorio):** la gestión **recibe** tramas etiquetadas en la VLAN del **SSID1** pero **responde sin etiqueta**. Por eso el puerto del switch tiene que aceptar tramas sin etiqueta y meterlas en la VLAN 10 (ether2 híbrido, PVID 10). La ayuda de la interfaz no lo decía. Los clientes inalámbricos de cualquier SSID también pueden llegar a la página de gestión (R-12).
 - Los clientes de SSID con VLAN distinta no se comunican entre sí; con **AP Isolation**, tampoco los del mismo SSID.
 - El manual de la versión 2 dice que un SSID con VLAN ID 1 sale sin etiqueta; **no se usa** porque la interfaz real del firmware 3.16.9 describe la gestión en la VLAN del SSID1.
 
@@ -71,7 +71,7 @@ Modos de operación: Access Point, **Multi-SSID**, Client, WDS Repeater, Univers
 | Servidor DHCP | Desactivado |
 | WPS, SNMP | Desactivados |
 | Wireless Advanced | AP Isolation activado, WMM activado, potencia según el lugar |
-| Puerto en sw01 | ether2, trunk con VLAN 10 y 40 etiquetadas |
+| Puerto en sw01 | ether2, híbrido: 10 y 40 etiquetadas hacia el AP; desde el AP acepta etiquetadas y sin etiqueta (PVID 10) |
 
 ### Orden para configurarlo
 
@@ -82,7 +82,7 @@ Modos de operación: Access Point, **Multi-SSID**, Client, WDS Repeater, Univers
 5. Hacer el respaldo (Backup) y guardarlo fuera del repositorio.
 6. Conectarlo a ether2 de sw01 y comprobar la gestión desde una estación de la VLAN 10.
 
-**Plan B (S-03):** si en el paso 6 la gestión no responde etiquetada en la VLAN 10, ether2 pasa a PVID 10 para el tráfico sin etiqueta y se documenta el comportamiento real aquí.
+**Resultado del paso 6 (2026-10-09):** con ether2 aceptando solo tramas etiquetadas, la gestión no respondía (ARP fallido en kit01; los contadores de ether2 mostraban 20 broadcasts enviados y 18 unicast recibidos que se descartaban). Con ether2 en PVID 10 aceptando tramas sin etiqueta: `ping` sin pérdida, `curl http://10.20.10.3/` → 200, MAC `f4:f2:6d:59:80:b6`. Ajustes de radio aplicados: 11bgn mixed, 20 MHz, canal fijo (anotar), Short GI activado.
 
 ## Limitaciones conocidas
 
