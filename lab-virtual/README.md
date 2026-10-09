@@ -23,7 +23,7 @@ Todo lo que crean los scripts lleva el prefijo `kitlab-`. No se modifica nada m�
 
 ### Si la máquina también tiene Docker
 
-Docker deja en `DROP` la política de reenvío del firewall, y libvirt (con nftables) no la abre para sus redes nuevas, así que las VMs llegan al gateway del uplink y resuelven DNS, pero no salen a Internet. Una de estas dos soluciones, a elección de cada integrante, porque es configuración de su máquina:
+Docker deja en `DROP` la política de reenvío del firewall, y libvirt (con nftables) no la abre para sus redes nuevas, así que las VMs llegan al gateway del uplink y resuelven DNS, pero no salen a Internet. Cada integrante elige una de estas dos soluciones, porque es configuración de su máquina.
 
 ```bash
 # Temporal (se pierde al reiniciar), limitada a la red del laboratorio
