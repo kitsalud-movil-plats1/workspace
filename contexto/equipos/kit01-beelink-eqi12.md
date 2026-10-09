@@ -1,15 +1,15 @@
-# kit01 — Beelink EQi12
+# kit01, Beelink EQi12
 
-Ficha del mini PC del kit: router/firewall (nftables, Kea, radvd, BIND9, Chrony, portal) e hipervisor de `clinica01` y `comunidad01`. Diseño de referencia: `docs/arquitectura/00-punto-de-partida.md`, D-02, D-04, D-14 y sección 6.
+Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, Chrony, portal) e hipervisor de `clinica01` y `comunidad01`. El diseño de referencia está en `docs/arquitectura/00-punto-de-partida.md`, D-02, D-04, D-14 y sección 6.
 
-**Estado (2026-10-09):** Ubuntu Server instalado, inventario hecho, NetBird conectado y VLAN de gestión hacia sw01 funcionando. Pendiente: hostname, nombres `wan0`/`lan0`, `PermitRootLogin no`, paquetes de virtualización y el resto de la red (`network#3`).
+**Estado (2026-10-09).** Ubuntu Server instalado, inventario hecho, NetBird conectado y VLAN de gestión hacia sw01 funcionando. Quedan pendientes el hostname, nombres `wan0`/`lan0`, `PermitRootLogin no`, paquetes de virtualización y el resto de la red (`network#3`).
 
 ## Identificación y hardware
 
 | Dato | Valor |
 |---|---|
 | Modelo | Beelink EQi12 (fabricante Shenzhen AZW Technology), variante `EQi12-D4-L-16500SD0W64PRO` |
-| CPU | Intel Core i3-1220P: 10 núcleos (2 de rendimiento y 8 de eficiencia), 12 hilos, hasta 4,4 GHz |
+| CPU | Intel Core i3-1220P, 10 núcleos (2 de rendimiento y 8 de eficiencia), 12 hilos, hasta 4,4 GHz |
 | RAM | 16 GB DDR4 |
 | Disco | SSD de 500 GB |
 | Red | Dos puertos Ethernet de 1 GbE (`wan0` hacia el RB3011, `lan0` trunk hacia sw01); Wi-Fi 6 y Bluetooth integrados, sin uso |
@@ -43,7 +43,7 @@ Ficha del mini PC del kit: router/firewall (nftables, Kea, radvd, BIND9, Chrony,
 | `lan0.10` (VLAN 10 sobre `enp171s0`) | `10.20.10.1/24`, `fd5a:fc7e:d716:10::1/64`, `fe80::1/64` |
 | `wt0` | `100.90.225.113/16` |
 
-Netplan: `/etc/netplan/50-cloud-init.yaml` (copia en `network/kit01/netplan/`); el anterior está en `/root/netplan-respaldo/`.
+El netplan está en `/etc/netplan/50-cloud-init.yaml` (copia en `network/kit01/netplan/`); el anterior está en `/root/netplan-respaldo/`.
 
 ## Interfaces previstas
 
