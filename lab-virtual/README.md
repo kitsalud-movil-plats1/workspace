@@ -23,7 +23,7 @@ Todo lo que crean los scripts lleva el prefijo `kitlab-`. No se modifica nada m�
 
 ### Si la máquina también tiene Docker
 
-Docker deja en `DROP` la política de reenvío del firewall, y libvirt (con nftables) no la abre para sus redes nuevas: las VMs llegan al gateway del uplink y resuelven DNS, pero no salen a Internet. Una de estas dos soluciones, a elección de cada integrante, porque es configuración de su máquina:
+Docker deja en `DROP` la política de reenvío del firewall, y libvirt (con nftables) no la abre para sus redes nuevas, así que las VMs llegan al gateway del uplink y resuelven DNS, pero no salen a Internet. Una de estas dos soluciones, a elección de cada integrante, porque es configuración de su máquina:
 
 ```bash
 # Temporal (se pierde al reiniciar), limitada a la red del laboratorio
@@ -55,7 +55,7 @@ ssh <usuario>@192.168.88.11 'sudo tcpdump -e -n -c3 -i lan0 vlan'   # tramas "vl
 
 ## Limitaciones frente al kit real
 
-- **No hay switch ni AP:** el cliente etiqueta su propio tráfico; no se prueban ACL, RA Guard ni SSID.
-- **Memoria:** `clinica01` necesita 7 GB; en el laboratorio solo caben VMs anidadas pequeñas para probar `br-srv` y el firewall entre VMs.
-- **Uplink:** el NAT de libvirt no reproduce la red de la universidad (proxy, bloqueos, NetBird por relay).
-- **Hardware:** nombres de interfaz, controladores y BIOS del Beelink EQi12 solo se validan en el equipo real.
+- **No hay switch ni AP.** El cliente etiqueta su propio tráfico; no se prueban ACL, RA Guard ni SSID.
+- **Memoria.** `clinica01` necesita 7 GB; en el laboratorio solo caben VMs anidadas pequeñas para probar `br-srv` y el firewall entre VMs.
+- **Uplink.** El NAT de libvirt no reproduce la red de la universidad (proxy, bloqueos, NetBird por relay).
+- **Hardware.** Los nombres de interfaz, controladores y BIOS del Beelink EQi12 solo se validan en el equipo real.
