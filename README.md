@@ -1,6 +1,6 @@
 # workspace
 
-Espacio de trabajo del **Kit móvil de atención primaria en salud** (Plataformas I, 2026-2). No es un entregable: reúne los repositorios del proyecto en una sola carpeta, las reglas de trabajo para personas y agentes, las plantillas y el laboratorio virtual.
+Espacio de trabajo del **Kit móvil de atención primaria en salud** (Plataformas I, 2026-2). Es una herramienta de trabajo, fuera de los entregables, que reúne los repositorios del proyecto en una sola carpeta, las reglas de trabajo para personas y agentes, las plantillas y el laboratorio virtual.
 
 ## Cómo empezar
 
@@ -10,7 +10,7 @@ cd kitsalud
 scripts/clonar-repos.sh
 ```
 
-Queda así (los repositorios del proyecto están ignorados por este repositorio y cada uno tiene su propio git):
+Queda así (los repositorios del proyecto están ignorados por este repositorio y cada uno tiene su propio git).
 
 ```
 kitsalud/
@@ -32,7 +32,7 @@ Se trabaja con **SDD (desarrollo guiado por especificaciones)**. Resumen de `AGE
 1. Se toma una tarea en **Ready** del [tablero](https://github.com/orgs/kitsalud-movil-plats1/projects/1); el issue es la especificación.
 2. Rama `feat/<numero>-<tema>` en el repositorio del issue.
 3. Plan con micro-tareas verificables, comentado en el issue (`plantillas/plan-tarea.md`).
-4. Una micro-tarea a la vez: cambiar, verificar, commit. No se avanza si la verificación falla.
+4. Una micro-tarea a la vez, que se cambia, se verifica y va en su propio commit. No se avanza si la verificación falla.
 5. README, documento de arquitectura (si cambia algo) y evidencia en el mismo PR.
 6. Se actualiza `contexto/` con lo aprendido.
 7. PR con `Closes`, revisión de otro integrante, fusionar y actualizar el tablero.
