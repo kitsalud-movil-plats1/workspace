@@ -104,7 +104,7 @@ kit01 y sw01 se configuran en remoto por NetBird (D-23 del documento). Solo se v
   sudo systemctl stop net-rollback.timer fw-rollback.timer   # solo si el acceso sigue
   ```
 
-- **netplan.** Se aplica con `sudo netplan generate && sudo networkctl reload`, que solo reconfigura las interfaces nuevas o modificadas. En remoto no se usan `netplan apply` ni `netplan try`, porque reinician todas las interfaces, incluida la WAN.
+- **netplan.** Se aplica con `sudo netplan generate && sudo networkctl reload`, que reconfigura las interfaces sin bajar los enlaces y conserva las direcciones y rutas que no cambian. En remoto no se usan `netplan apply` ni `netplan try`, porque reinician todas las interfaces, incluida la WAN.
 - **nftables.** Las reglas aceptan siempre `wt0`, el tráfico de NetBird por `enp170s0` y SSH.
 - **sw01.** Se entra por SSH a través de kit01 (`ssh -J <usuario>@<ip-netbird-kit01> admin@10.20.10.2`) y cada cambio se hace en Safe Mode (Ctrl+X), que deshace todo si la sesión se corta.
 - **Sesiones.** Mantener una segunda sesión SSH abierta mientras se aplica, y aplicar en un solo comando lo que pueda cortar la sesión.

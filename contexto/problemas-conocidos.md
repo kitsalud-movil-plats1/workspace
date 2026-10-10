@@ -55,3 +55,27 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Aparece `virbr0` con `192.168.122.1` o reglas dentro de las cadenas `LIBVIRT_*` de iptables en kit01.
 - **Causa.** Al instalar `libvirt-daemon-system`, la red `default` queda activa y con arranque automático.
 - **Solución.** `virsh -c qemu:///system net-destroy default` y `virsh -c qemu:///system net-autostart --disable default`. Las cadenas `LIBVIRT_*` vacías y sus saltos son normales.
+
+## Las IPv6 de un bridge sin puertos no sirven
+
+- **Síntoma.** En un bridge sin puertos (como `br-srv` antes de que existan las VMs), las IPv6 aparecen en `tentative`, la ruta en `linkdown` y un servicio que intenta escuchar en ellas falla con `Cannot assign requested address`. Las IPv4 sí funcionan.
+- **Causa.** Un bridge sin puertos no tiene portadora, y el kernel no completa la detección de direcciones duplicadas (DAD) de IPv6 hasta que la tiene.
+- **Solución.** Darle un puerto virtual, `srv-dummy0` (`dummy-devices` en netplan). Ver `network/kit01/netplan/README.md`.
+
+## `accept_ra` del kernel no cambia nada en kit01
+
+- **Síntoma.** `sysctl net.ipv6.conf.enp170s0.accept_ra` vale `0` y aun así la interfaz toma IPv6 por SLAAC, y cambiar ese valor no tiene efecto.
+- **Causa.** systemd-networkd procesa los RA por su cuenta y deja el del kernel en `0`. Además, deja de aceptarlos por defecto cuando el reenvío IPv6 está activo.
+- **Solución.** Controlar los RA con `accept-ra` en el netplan (`IPv6AcceptRA=` en `/run/systemd/network/`). En `enp170s0` está en `false` (sección 8.3).
+
+## Queda una ruta IPv6 del uplink después de dejar de aceptar RA
+
+- **Síntoma.** Con `accept-ra: false` aplicado, `ip -6 route show dev enp170s0` todavía muestra `2001:db8:a:c::/64 proto kernel`, aunque la dirección y la ruta por defecto ya no están.
+- **Causa.** Es la ruta de prefijo que el kernel creó junto con la dirección SLAAC; systemd-networkd no la borra.
+- **Solución.** `sudo ip -6 route del 2001:db8:a:c::/64 dev enp170s0 proto kernel`. No vuelve, porque ya no se aceptan RA, y tampoco existe después de reiniciar.
+
+## `networkctl reload` reconfigura todas las interfaces
+
+- **Síntoma.** Después de `netplan generate && networkctl reload`, el journal de systemd-networkd muestra `Reconfiguring` en todas las interfaces, también en las que no cambiaron (por ejemplo `enp170s0`).
+- **Causa.** netplan reescribe todos los archivos de `/run/systemd/network/`, y networkd reconfigura las interfaces cuyos archivos cambiaron.
+- **Solución.** Ninguna; no baja los enlaces y conserva las direcciones y rutas que no cambian (0 % de pérdida en un ping por NetBird durante el reload). Por eso sigue siendo el método de D-23, siempre con restauración programada.
