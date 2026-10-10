@@ -41,7 +41,7 @@ Todo el trabajo sigue **SDD (Spec-Driven Development)**. Primero se escribe qué
 | Fase | Artefacto | Dónde queda | Quién la valida |
 |---|---|---|---|
 | 1. Especificación | Issue con contexto, qué hacer, dónde queda, criterios de aceptación y cobertura | Tablero | El equipo, al crearla |
-| 2. Plan | Micro-tareas, cada una con su verificación y resultado esperado; decisiones propuestas | Comentario en el issue (`plantillas/plan-tarea.md`) | Una persona del equipo, si hay decisiones propuestas |
+| 2. Plan | Micro-tareas, cada una con su verificación y resultado esperado; decisiones propuestas | Solo en la sesión de trabajo, con el formato de `plantillas/plan-tarea.md`; no se publica en el issue ni se versiona | Quien dirige la sesión, antes de cambiar algo |
 | 3. Implementación | Archivos de configuración y Ansible, un commit por micro-tarea | Rama `feat/<numero>-<tema>` | Quien implementa |
 | 4. Verificación | Comandos y su salida real, en IPv4 e IPv6 | PR ("Cómo se validó") | Revisor del PR |
 | 5. Evidencia | Pruebas P1-P13 con interpretación | `docs/evidencias/` (`plantillas/evidencia.md`) | Revisor del PR |
@@ -60,7 +60,7 @@ Reglas del SDD.
 1. **Tomar la tarea.** Debe estar en **Ready** (sin bloqueos abiertos). Asignarse y moverla a **In progress**.
 2. **Leer** en el orden de la sección 1.
 3. **Rama** desde `main` actualizada, en el repositorio del issue, con el nombre `feat/<numero>-<tema>` (o `fix/<numero>-<tema>` para fallas), por ejemplo `feat/12-netplan-kit01`.
-4. **Plan** comentado en el issue antes de escribir configuración.
+4. **Plan** presentado en la sesión de trabajo antes de escribir configuración. No se publica en el issue ni se versiona. Lo que sí queda en el issue es la corrección de la especificación, cuando hace falta.
 5. **Construir de a una micro-tarea.** Cambiar → verificar → commit.
 6. **Verificar** primero en el laboratorio virtual (`lab-virtual/`) y después en el kit real, cuando la tarea lo requiera.
 7. **Documentar en el mismo PR.** README del componente (qué hace, cómo se despliega, cómo se verifica, cómo se diagnostica). Si cambia una dirección, un nombre, un flujo o una decisión, PR en `docs`. El documento describe el estado actual; no se mencionan correcciones ni retroalimentación.
