@@ -43,3 +43,15 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** En comandos remotos (`ssh kit01 'sudo ...'`), `sudo` pide la contraseña aunque se haya dado antes.
 - **Causa.** Sin terminal, `sudo` no reutiliza la autenticación entre comandos.
 - **Solución.** `sudo -S` leyendo la contraseña de la entrada estándar, o una sola sesión `sudo -S bash -s` con todos los comandos. Para cambios de red, programar antes una restauración (`systemd-run --on-active=...`), como en `AGENTS.md`, sección 6.
+
+## `apt full-upgrade` deja paquetes sin actualizar
+
+- **Síntoma.** Después de `apt full-upgrade`, `apt list --upgradable` todavía muestra paquetes (en kit01, `open-iscsi` y `libopeniscsiusr`) y la salida dice "deferred due to phasing".
+- **Causa.** Ubuntu publica algunas actualizaciones de forma escalonada (`apt-cache policy <paquete>` muestra `phased 20%`) y apt las difiere en cada equipo hasta que le toca.
+- **Solución.** Ninguna; es el comportamiento esperado y se instalan solas en una actualización posterior. No se fuerzan.
+
+## La red `default` de libvirt vuelve a aparecer
+
+- **Síntoma.** Aparece `virbr0` con `192.168.122.1` o reglas dentro de las cadenas `LIBVIRT_*` de iptables en kit01.
+- **Causa.** Al instalar `libvirt-daemon-system`, la red `default` queda activa y con arranque automático.
+- **Solución.** `virsh -c qemu:///system net-destroy default` y `virsh -c qemu:///system net-autostart --disable default`. Las cadenas `LIBVIRT_*` vacías y sus saltos son normales.
