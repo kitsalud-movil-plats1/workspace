@@ -33,6 +33,8 @@ Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, 
 | SSH | Con contraseña y `PermitRootLogin no` (drop-in `/etc/ssh/sshd_config.d/10-comun.conf` del rol `comun` de Ansible, que gana sobre `50-cloud-init.conf`); escucha en IPv4 e IPv6. Copia del drop-in anterior en `/root/ssh-anterior/` |
 | Zona horaria | `America/Bogota` (rol `comun`; antes `Etc/UTC`) |
 | Ansible | Se administra desde `platform/ansible` con `ansible-playbook playbooks/comun.yml` (inventario `kit`, conexión por NetBird con el usuario compartido y el vault) |
+| Almacenamiento de VMs | LV `ubuntu-vg/vms` de 320 GiB (ext4, etiqueta `vms`) en `/var/lib/libvirt/images`, con `nofail` en `fstab`. Quedan unos 54 GiB libres en el VG. Imagen base en `base/` |
+| VMs | `clinica01` (4 vCPU, 7 GB, MAC `52:54:00:20:00:11`, `vnet` en `br-srv`) y `comunidad01` (2 vCPU, 2,5 GB, MAC `52:54:00:20:00:12`), las dos con autostart. Con las dos encendidas, kit01 usa unos 2,3 GiB y tiene 13 GiB disponibles en reposo |
 | NetBird | 0.80.0, IP `100.90.225.113`; paquete retenido con `apt-mark hold`. Su firewall usa las tablas iptables-nft `ip filter`, `ip nat`, `ip mangle` e `ip raw` |
 | Virtualización (paquetes) | QEMU 8.2.2 (`qemu-system-x86`, que provee `qemu-kvm`), libvirt 10.0.0, virt-install 4.1.0. Red `default` (`virbr0`) detenida y sin arranque automático; libvirt deja los saltos a cadenas `LIBVIRT_*` vacías |
 | `virt-host-validate qemu` | Todo `PASS` (IOMMU incluido, el kernel lo activa por defecto) salvo `WARN` de "secure guest support" |

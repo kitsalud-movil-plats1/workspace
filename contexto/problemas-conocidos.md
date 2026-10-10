@@ -103,3 +103,15 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Recién encendido, `kitlab-cliente` acepta la conexión TCP al puerto 22 pero no envía el banner (`Connection timed out during banner exchange`).
 - **Causa.** El cliente no tiene DHCP en la VLAN 10 y el arranque espera la red unos dos minutos antes de levantar sshd.
 - **Solución.** Esperar a que `nc <link-local> 22` desde `kitlab-kit01` muestre el banner `SSH-2.0-...`.
+
+## Ansible no llega a las VMs a través de kit01 con contraseña
+
+- **Síntoma.** Con `ProxyJump` hacia kit01, Ansible falla al conectar a una VM aunque `sshpass` esté instalado.
+- **Causa.** Los dos saltos piden contraseña (D-18) y `sshpass` solo contesta el primer aviso.
+- **Solución.** El salto por kit01 usa `ProxyCommand` con `sshpass -f ~/.config/kitsalud/ssh-pass`, archivo que crea `playbooks/preparar-control.yml` desde el vault. Ver `platform/ansible/README.md`.
+
+## Una VM recreada no deja entrar por SSH
+
+- **Síntoma.** Después de recrear una VM con la misma IP, `ssh` o Ansible fallan con `REMOTE HOST IDENTIFICATION HAS CHANGED`.
+- **Causa.** La VM nueva tiene otra clave de host y la vieja sigue en `known_hosts`.
+- **Solución.** El rol `kit01_vms` la borra al crear la VM. A mano, `ssh-keygen -R <ip>`.
