@@ -79,3 +79,15 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Después de `netplan generate && networkctl reload`, el journal de systemd-networkd muestra `Reconfiguring` en todas las interfaces, también en las que no cambiaron (por ejemplo `enp170s0`).
 - **Causa.** netplan reescribe todos los archivos de `/run/systemd/network/`, y networkd reconfigura las interfaces cuyos archivos cambiaron.
 - **Solución.** Ninguna; no baja los enlaces y conserva las direcciones y rutas que no cambian (0 % de pérdida en un ping por NetBird durante el reload). Por eso sigue siendo el método de D-23, siempre con restauración programada.
+
+## Un `flush ruleset` deja a NetBird sin sus reglas
+
+- **Síntoma.** Después de aplicar un archivo de nftables con `flush ruleset`, o de `systemctl stop nftables` con la unidad de Ubuntu, desaparecen las tablas `ip filter`, `ip nat` y las demás de iptables-nft.
+- **Causa.** NetBird y libvirt usan iptables-nft, que guarda sus reglas en tablas de nftables. El `nftables.conf` de Ubuntu empieza con `flush ruleset` y su `ExecStop` es `nft flush ruleset`.
+- **Solución.** El firewall de kit01 borra y recrea solo sus tablas y tiene un `ExecStop` propio (`network/kit01/nftables/`). Si pasa, `sudo systemctl restart netbird` vuelve a crear las reglas de NetBird.
+
+## El laboratorio virtual no sirve para probar la salida a Internet por NAT
+
+- **Síntoma.** Un cliente de la Interna del laboratorio no llega a Internet aunque el NAT de `kitlab-kit01` funcione.
+- **Causa.** El propio `kitlab-kit01` no sale a Internet en máquinas con Docker (ver "El laboratorio virtual no sale a Internet").
+- **Solución.** Probar el NAT contra el gateway del uplink del laboratorio (`192.168.88.1`). La respuesta solo vuelve si hay masquerade, porque la máquina anfitriona no tiene ruta hacia `10.20.0.0/16`.

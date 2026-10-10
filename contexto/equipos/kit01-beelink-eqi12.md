@@ -2,7 +2,7 @@
 
 Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, Chrony, portal) e hipervisor de `clinica01` y `comunidad01`. El diseño de referencia está en `docs/arquitectura/00-punto-de-partida.md`, D-02, D-04, D-14 y sección 6.
 
-**Estado (2026-10-10).** Ubuntu Server instalado y actualizado, hostname `kit01`, SSH sin root, KVM/libvirt instalado, NetBird conectado y VLAN de gestión hacia sw01 funcionando. La red interna (`network#3`) está aplicada. Quedan pendientes el arranque con el kernel nuevo (P12) y el firewall base (`network#4`).
+**Estado (2026-10-10).** Ubuntu Server instalado y actualizado, hostname `kit01`, SSH sin root, KVM/libvirt instalado, NetBird conectado y VLAN de gestión hacia sw01 funcionando. La red interna (`network#3`) y el firewall base (`network#4`) están aplicados. Queda pendiente el arranque con el kernel nuevo (P12).
 
 ## Identificación y hardware
 
@@ -52,6 +52,17 @@ Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, 
 
 Los bridges tienen STP apagado y `forward-delay` 0. El reenvío IPv4 e IPv6 está en `/etc/sysctl.d/60-kit01-router.conf`. El netplan está en `/etc/netplan/50-cloud-init.yaml` (copia en `network/kit01/netplan/`). En `/root/netplan-anterior/` está el netplan previo al último cambio, y en `/root/netplan-anterior/previo-network3/` el anterior a `br-com` y `br-srv`.
 
-Hasta el firewall base (`network#4`), la cadena `FORWARD` de iptables está en `ACCEPT` y kit01 reenvía sin filtrar.
+## Firewall
+
+| Dato | Valor |
+|---|---|
+| Tablas propias | `inet filtro` (input y forward en drop, output en accept) e `ip nat_kit` (masquerade de `10.20.0.0/16` por `enp170s0`), en `/etc/nftables.conf` |
+| Tablas de iptables-nft | `ip filter`, `ip nat`, `ip mangle`, `ip raw` (NetBird y libvirt) e `ip6 filter`, `ip6 nat`, `ip6 mangle` (libvirt). `iptables-save \| grep -c NETBIRD` da 28 |
+| Servicio | `nftables.service` habilitado, con `ExecStop` propio (`/etc/nftables/quitar.nft`) en `/etc/systemd/system/nftables.service.d/kit01.conf` |
+| NetBird | WireGuard en `udp/51820` (kernel, interfaz `wt0`); en la prueba todos los peers iban por relay (`rels://...relay.netbird.io:443`) |
+| Respaldo | `/root/nft-anterior/` (ruleset e iptables antes de aplicar, y el `nftables.conf` original de Ubuntu) |
+| Log | `journalctl -k \| grep fw-drop`; aparece el MNDP de sw01 (`udp/5678` a `255.255.255.255`) como ruido |
+
+El SSH a kit01 entra por `wt0` o desde las IPs admin `10.20.10.10-29` por IPv4. Desde la WAN y por IPv6 en la Interna está bloqueado.
 
 `wan0` y `lan0` son nombres de rol; la configuración usa los nombres del kernel, que no cambian mientras no cambie el hardware (D-14).
