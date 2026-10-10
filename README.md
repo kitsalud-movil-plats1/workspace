@@ -31,7 +31,7 @@ Se trabaja con **SDD (desarrollo guiado por especificaciones)**. Resumen de `AGE
 
 1. Se toma una tarea en **Ready** del [tablero](https://github.com/orgs/kitsalud-movil-plats1/projects/1); el issue es la especificación.
 2. Rama `feat/<numero>-<tema>` en el repositorio del issue.
-3. Plan con micro-tareas verificables, comentado en el issue (`plantillas/plan-tarea.md`).
+3. Plan con micro-tareas verificables, presentado en la sesión de trabajo y sin publicarlo (`plantillas/plan-tarea.md`).
 4. Una micro-tarea a la vez, que se cambia, se verifica y va en su propio commit. No se avanza si la verificación falla.
 5. README, documento de arquitectura (si cambia algo) y evidencia en el mismo PR.
 6. Se actualiza `contexto/` con lo aprendido.
