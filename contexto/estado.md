@@ -1,6 +1,6 @@
 # Estado de implementación
 
-**Última actualización.** 2026-10-10, con el firewall base de kit01 (network#4)
+**Última actualización.** 2026-10-10, con la base de Ansible (platform#4)
 
 Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 
@@ -17,7 +17,7 @@ Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 
 | Equipo | Estado | Hecho | Pendiente | Referencia |
 |---|---|---|---|---|
-| kit01 (Beelink EQi12) | 🟡 | Ubuntu 24.04.5 actualizado, hostname `kit01`, `PermitRootLogin no`, KVM/libvirt (QEMU 8.2.2, libvirt 10.0.0, `virt-host-validate` sin `FAIL`), red `default` de libvirt desactivada, `netbird` retenido; inventario, NetBird (`100.90.225.113`); red interna completa (`lan0.10`, `br-com` con `lan0.40`, `br-srv` con `srv-dummy0`, `fe80::1` en las tres), reenvío IPv4 e IPv6, WAN sin RA; firewall base (`inet filtro` y NAT en `ip nat_kit`, persistente, sin tocar las tablas de iptables-nft de NetBird) | Arrancar con el kernel 6.8.0-146 y comprobar la red y el firewall tras el reinicio (P12); matriz de flujos (network#10) | platform#1, #3, PR platform#18; PR network#15, PR network#16 |
+| kit01 (Beelink EQi12) | 🟡 | Ubuntu 24.04.5 actualizado, hostname `kit01`, `PermitRootLogin no` (rol `comun`), zona horaria `America/Bogota`, KVM/libvirt (QEMU 8.2.2, libvirt 10.0.0, `virt-host-validate` sin `FAIL`), red `default` de libvirt desactivada, `netbird` retenido; inventario, NetBird (`100.90.225.113`); red interna completa (`lan0.10`, `br-com` con `lan0.40`, `br-srv` con `srv-dummy0`, `fe80::1` en las tres), reenvío IPv4 e IPv6, WAN sin RA; firewall base (`inet filtro` y NAT en `ip nat_kit`, persistente, sin tocar las tablas de iptables-nft de NetBird) | Arrancar con el kernel 6.8.0-146 y comprobar la red y el firewall tras el reinicio (P12); matriz de flujos (network#10) | platform#1, #3, PR platform#18; PR network#15, PR network#16 |
 | sw01 (CCR2004) | 🟡 | Configuración base con bridge y VLAN filtering, puertos, gestión `10.20.10.2`, sin reenvío IP, servicios limitados; ether2 híbrido | DHCP snooping, filtro de RA, hora | network#2, network#11 |
 | ap01 (TL-WA801ND v3) | 🟡 | Configurado (Multi-SSID 10/40, DHCP propio apagado, IP `10.20.10.3`); gestión verificada desde kit01 | Clientes en cada SSID (necesita Kea), aislamiento | network#7 |
 | Conexión física | 🟡 | kit01 `enp171s0` ↔ ether1; AP ↔ ether2; `enp170s0` ↔ red del laboratorio | Etiquetas, fotos, disco USB | network#1 |
@@ -29,7 +29,7 @@ Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 |---|---|---|---|
 | Laboratorio virtual | ✅ | `kitlab-kit01` y `kitlab-cliente`; VLAN 10 verificada en el trunk | `lab-virtual/`, workspace#1 |
 | Salida a Internet del laboratorio virtual | ⬜ | Depende de la configuración de Docker de cada máquina | `problemas-conocidos.md` |
-| Base de Ansible | ⬜ | Lista para tomar | platform#4 |
+| Base de Ansible | ✅ | Inventarios `kit` y `lab`, plan de direcciones en `red.yml`, secretos en `ansible-vault` (contraseña en `~/.config/kitsalud/vault-pass`, fuera del repositorio) y rol `comun` aplicado en kit01 (idempotente). Falta pasar a Ansible la red, el firewall y la base de kit01 | PR platform#19; network#17, platform#20 |
 | Prueba de humo de DHIS2 | ⬜ | Lista para tomar | apps#1 |
 
 ## Servicios
