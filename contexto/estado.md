@@ -1,6 +1,6 @@
 # Estado de implementación
 
-**Última actualización.** 2026-10-10, con la base de Ansible (platform#4)
+**Última actualización.** 2026-10-10, con las VMs clinica01 y comunidad01 (platform#7)
 
 Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 
@@ -34,7 +34,11 @@ Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 
 ## Servicios
 
-Ningún servicio del kit está implementado todavía (hitos Servicios base en adelante).
+| Componente | Estado | Detalle | Referencia |
+|---|---|---|---|
+| VMs `clinica01` y `comunidad01` | ✅ | Creadas con Ansible (rol `kit01_vms`) en `br-srv`, con IP fija v4/v6, MAC fija, autostart, discos en el LV `vms` y datos en `/srv`; rol `comun` aplicado (SSH solo desde kit01, `ufw`). Sin salida a Internet hasta F-17 | PR platform#21, network#18 |
+
+Los servicios dentro de las VMs (DHIS2, Samba AD, Kiwix, Jellyfin) y los del host (BIND9, Chrony, Kea) están pendientes.
 
 ## Visitas presenciales previstas
 
