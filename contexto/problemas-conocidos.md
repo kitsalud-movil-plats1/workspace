@@ -115,3 +115,21 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Después de recrear una VM con la misma IP, `ssh` o Ansible fallan con `REMOTE HOST IDENTIFICATION HAS CHANGED`.
 - **Causa.** La VM nueva tiene otra clave de host y la vieja sigue en `known_hosts`.
 - **Solución.** El rol `kit01_vms` la borra al crear la VM. A mano, `ssh-keygen -R <ip>`.
+
+## La carga de metadatos de DHIS2 responde 409 con estado `WARNING`
+
+- **Síntoma.** `POST /api/metadata` devuelve HTTP 409 y `status: WARNING`, y después el tracker no encuentra la unidad organizativa ni el programa.
+- **Causa.** Con `atomicMode=ALL`, un solo error (por ejemplo `E4000 Missing required property shortName` en un tipo de entidad) hace que no se importe nada.
+- **Solución.** Pedir `importReportMode=ERRORS` y leer `typeReports[].objectReports[].errorReports`. `prueba-humo/carga.py` ya los muestra y se detiene.
+
+## `ansible-vault` falla con "Non-blocking file handles detected"
+
+- **Síntoma.** Desde un agente o un script, `ansible-vault decrypt`, `encrypt` o `view` terminan con `Ansible requires blocking IO on stdin/stdout/stderr`.
+- **Causa.** La entrada o la salida del proceso están en modo no bloqueante.
+- **Solución.** Redirigir la entrada y pasar la salida por un tubo, `ansible-vault ... </dev/null 2>&1 | cat`.
+
+## DHIS2 no conecta después de cambiar la contraseña de la base en el vault
+
+- **Síntoma.** Con la contraseña nueva en el vault y en `.env`, `dhis2-core-1` no arranca y el log muestra `password authentication failed`.
+- **Causa.** `POSTGRES_PASSWORD` solo se usa al crear la base; PostgreSQL conserva la contraseña anterior.
+- **Solución.** Con `db` arriba, `docker compose exec -T db psql -U dhis -d dhis2 -c "ALTER USER dhis PASSWORD '...'"` tomando el valor del vault, y después levantar `core`.
