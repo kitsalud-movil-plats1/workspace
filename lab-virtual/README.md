@@ -58,4 +58,5 @@ ssh <usuario>@192.168.88.11 'sudo tcpdump -e -n -c3 -i lan0 vlan'   # tramas "vl
 - **No hay switch ni AP.** El cliente etiqueta su propio tráfico; no se prueban ACL, RA Guard ni SSID.
 - **Memoria.** `clinica01` necesita 7 GB; en el laboratorio solo caben VMs anidadas pequeñas para probar `br-srv` y el firewall entre VMs.
 - **Uplink.** El NAT de libvirt no reproduce la red de la universidad (proxy, bloqueos, NetBird por relay).
-- **Hardware.** Los nombres de interfaz, controladores y BIOS del Beelink EQi12 solo se validan en el equipo real.
+- **Hardware.** Los controladores y la BIOS del Beelink EQi12 solo se validan en el equipo real.
+- **Nombres de interfaz.** En el laboratorio cloud-init fija `wan0` y `lan0` por MAC; en kit01 se usan los nombres del kernel (`enp170s0` y `enp171s0`, D-14). Las variables de Ansible `iface_wan` e `iface_lan` guardan el nombre de cada rol en cada inventario.
