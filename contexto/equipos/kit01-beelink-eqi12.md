@@ -2,7 +2,7 @@
 
 Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, Chrony, portal) e hipervisor de `clinica01` y `comunidad01`. El diseño de referencia está en `docs/arquitectura/00-punto-de-partida.md`, D-02, D-04, D-14 y sección 6.
 
-**Estado (2026-10-10).** Ubuntu Server instalado y actualizado, hostname `kit01`, SSH sin root, KVM/libvirt instalado, NetBird conectado y VLAN de gestión hacia sw01 funcionando. Quedan pendientes el arranque con el kernel nuevo (P12) y el resto de la red (`network#3`).
+**Estado (2026-10-10).** Ubuntu Server instalado y actualizado, hostname `kit01`, SSH sin root, KVM/libvirt instalado, NetBird conectado y VLAN de gestión hacia sw01 funcionando. La red interna (`network#3`) está aplicada. Quedan pendientes el arranque con el kernel nuevo (P12) y el firewall base (`network#4`).
 
 ## Identificación y hardware
 
@@ -37,26 +37,21 @@ Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, 
 | Respaldo de la instalación | `/root/respaldo-platform2/` (hostname, hosts, `sshd_config.d`, `dpkg -l` e iptables antes y después) |
 | "Restore on AC power loss" | Sin revisar; opcional, porque exige ir al laboratorio y se puede encender a mano |
 
-## Red actual (provisional)
+## Red actual
 
 | Interfaz | Direcciones |
 |---|---|
-| `enp170s0` | `192.168.160.69/24` fija, gateway `192.168.160.1`, DNS `192.168.215.20` y `.30`; toma además una dirección del prefijo IPv6 que anuncia el laboratorio (`2001:db8:a:c::/64`) |
-| `enp171s0` | Sin dirección (trunk) |
-| `lan0.10` (VLAN 10 sobre `enp171s0`) | `10.20.10.1/24`, `fd5a:fc7e:d716:10::1/64`, `fe80::1/64` |
-| `wt0` | `100.90.225.113/16` |
+| `enp170s0` (rol `wan0`) | `192.168.160.69/24` fija, gateway `192.168.160.1`, DNS `192.168.215.20` y `.30`. Ignora los RA del uplink (`accept-ra: false`, sección 8.3), así que solo tiene su link-local IPv6 |
+| `enp171s0` (rol `lan0`) | Sin dirección (trunk hacia sw01 ether1, VLAN 10, 40 y 20 etiquetadas) |
+| `lan0.10` | `10.20.10.1/24`, `fd5a:fc7e:d716:10::1/64`, `fe80::1/64` |
+| `lan0.40` | Sin dirección, puerto de `br-com` |
+| `br-com` | `10.20.40.1/24`, `fd5a:fc7e:d716:40::1/64`, `fe80::1/64`; MAC `da:14:01:ec:7d:fb` (fija, generada por systemd-networkd), que sw01 aprende en ether1 por la VLAN 40 |
+| `srv-dummy0` | Interfaz dummy, único puerto de `br-srv` |
+| `br-srv` | `10.20.20.1/24`, `10.20.20.10/24`, `fd5a:fc7e:d716:20::1/64`, `fd5a:fc7e:d716:20::10/64`, `fe80::1/64` |
+| `wt0` | `100.90.225.113/16`, sin gestión de systemd-networkd (`unmanaged`) |
 
-El netplan está en `/etc/netplan/50-cloud-init.yaml` (copia en `network/kit01/netplan/`); el anterior está en `/root/netplan-respaldo/`.
+Los bridges tienen STP apagado y `forward-delay` 0. El reenvío IPv4 e IPv6 está en `/etc/sysctl.d/60-kit01-router.conf`. El netplan está en `/etc/netplan/50-cloud-init.yaml` (copia en `network/kit01/netplan/`). En `/root/netplan-anterior/` está el netplan previo al último cambio, y en `/root/netplan-anterior/previo-network3/` el anterior a `br-com` y `br-srv`.
 
-## Interfaces previstas
-
-| Interfaz | Uso | Direcciones |
-|---|---|---|
-| `wan0` (`enp170s0`) | Uplink del sitio | DHCPv4 o fija según el sitio; no se modifica en remoto. Acepta RA aunque reenvíe (`accept_ra=2`), y nftables no reenvía IPv6 hacia ella |
-| `lan0` (`enp171s0`) | Trunk hacia sw01 ether1 | Sin dirección propia |
-| `lan0.10` | Interna | `10.20.10.1/24`, `fd5a:fc7e:d716:10::1/64`, `fe80::1` |
-| `br-com` | Comunidad, con `lan0.40` y la VM `prueba01` como puertos | `10.20.40.1/24`, `fd5a:fc7e:d716:40::1/64`, `fe80::1` |
-| `br-srv` | Red de servidores (sin puerto físico) | `10.20.20.1` y `.10`, `fd5a:fc7e:d716:20::1` y `::10`, `fe80::1` |
-| `wt0` | NetBird | `100.64.0.0/10` |
+Hasta el firewall base (`network#4`), la cadena `FORWARD` de iptables está en `ACCEPT` y kit01 reenvía sin filtrar.
 
 `wan0` y `lan0` son nombres de rol; la configuración usa los nombres del kernel, que no cambian mientras no cambie el hardware (D-14).
