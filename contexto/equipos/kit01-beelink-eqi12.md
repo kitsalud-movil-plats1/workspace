@@ -30,7 +30,9 @@ Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, 
 | cloud-init | Desactivado (`/etc/cloud/cloud-init.disabled`); no cambia el hostname ni la red al arrancar |
 | Hostname | `kit01`, con `127.0.1.1 kit01.salud.movil kit01` en `/etc/hosts` |
 | Usuario | `kitsalud`, compartido (D-18), con sudo y en los grupos `libvirt` y `kvm` |
-| SSH | Con contraseña y `PermitRootLogin no` (drop-in `/etc/ssh/sshd_config.d/10-kit01.conf`, que gana sobre `50-cloud-init.conf`); escucha en IPv4 e IPv6 |
+| SSH | Con contraseña y `PermitRootLogin no` (drop-in `/etc/ssh/sshd_config.d/10-comun.conf` del rol `comun` de Ansible, que gana sobre `50-cloud-init.conf`); escucha en IPv4 e IPv6. Copia del drop-in anterior en `/root/ssh-anterior/` |
+| Zona horaria | `America/Bogota` (rol `comun`; antes `Etc/UTC`) |
+| Ansible | Se administra desde `platform/ansible` con `ansible-playbook playbooks/comun.yml` (inventario `kit`, conexión por NetBird con el usuario compartido y el vault) |
 | NetBird | 0.80.0, IP `100.90.225.113`; paquete retenido con `apt-mark hold`. Su firewall usa las tablas iptables-nft `ip filter`, `ip nat`, `ip mangle` e `ip raw` |
 | Virtualización (paquetes) | QEMU 8.2.2 (`qemu-system-x86`, que provee `qemu-kvm`), libvirt 10.0.0, virt-install 4.1.0. Red `default` (`virbr0`) detenida y sin arranque automático; libvirt deja los saltos a cadenas `LIBVIRT_*` vacías |
 | `virt-host-validate qemu` | Todo `PASS` (IOMMU incluido, el kernel lo activa por defecto) salvo `WARN` de "secure guest support" |

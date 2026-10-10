@@ -91,3 +91,15 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Un cliente de la Interna del laboratorio no llega a Internet aunque el NAT de `kitlab-kit01` funcione.
 - **Causa.** El propio `kitlab-kit01` no sale a Internet en máquinas con Docker (ver "El laboratorio virtual no sale a Internet").
 - **Solución.** Probar el NAT contra el gateway del uplink del laboratorio (`192.168.88.1`). La respuesta solo vuelve si hay masquerade, porque la máquina anfitriona no tiene ruta hacia `10.20.0.0/16`.
+
+## Un handler de Ansible con `changed_when: false` no avisa a otro
+
+- **Síntoma.** Después de cambiar el drop-in de sshd, el handler que valida con `sshd -t` corre, pero el que recarga ssh nunca se ejecuta.
+- **Causa.** Un handler solo avisa a otro cuando termina en `changed`, y el de validación tiene `changed_when: false`.
+- **Solución.** Que los dos escuchen el mismo aviso con `listen` (se ejecutan en el orden en que están escritos). Así está el rol `comun`.
+
+## El cliente del laboratorio virtual tarda en aceptar SSH al arrancar
+
+- **Síntoma.** Recién encendido, `kitlab-cliente` acepta la conexión TCP al puerto 22 pero no envía el banner (`Connection timed out during banner exchange`).
+- **Causa.** El cliente no tiene DHCP en la VLAN 10 y el arranque espera la red unos dos minutos antes de levantar sshd.
+- **Solución.** Esperar a que `nc <link-local> 22` desde `kitlab-kit01` muestre el banner `SSH-2.0-...`.
