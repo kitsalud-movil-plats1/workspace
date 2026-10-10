@@ -90,14 +90,24 @@ El contexto **complementa** al documento de arquitectura. El diseño (qué y por
 - Las variables de Ansible (IPs, prefijos, nombres) se definen una sola vez en el inventario de `platform/ansible` y se reutilizan.
 - Los roles de cada componente viven en su repositorio (`<repo>/ansible/roles/`); `platform/ansible` los encuentra por `roles_path` gracias a la estructura de este espacio de trabajo.
 
-## 6. Cambios que pueden cortar el acceso
+## 6. Trabajo remoto y cambios que pueden cortar el acceso
 
-En kit01 (`nftables`, netplan, `sshd`, NetBird) un error deja al equipo fuera, así que se siguen estos pasos.
+kit01 y sw01 se configuran en remoto por NetBird (D-23 del documento). Solo se va al laboratorio para lo que no se puede probar de otra forma, como las pruebas con Wi-Fi y celulares, conectar el disco USB o el reinicio de P12. En kit01 (`nftables`, netplan, `sshd`) un error deja al equipo fuera, así que se siguen estos pasos.
 
-- Probar primero en el laboratorio virtual.
-- Validar antes de aplicar con `nft -c -f <archivo>`, `netplan generate`, `sshd -t`.
-- Aplicar con vuelta atrás, con `netplan try`; para nftables, programar la restauración antes de aplicar (`sudo systemd-run --on-active=120 --unit=fw-rollback nft -f /etc/nftables.conf.anterior`) y cancelarla (`sudo systemctl stop fw-rollback.timer`) solo si el acceso sigue funcionando.
-- Mantener una segunda sesión SSH abierta mientras se aplica.
+- **Lo que no se toca.** `enp170s0` (WAN), NetBird y su configuración. Las NIC conservan los nombres del kernel (`wan0` es `enp170s0` y `lan0` es `enp171s0`, D-14).
+- **Antes.** Probar en el laboratorio virtual y validar con `netplan generate`, `nft -c -f <archivo>` y `sshd -t`. Guardar una copia del archivo que se va a cambiar.
+- **Restauración programada.** Antes de aplicar se programa la vuelta al archivo anterior y se cancela solo si el acceso sigue funcionando.
+
+  ```bash
+  sudo systemd-run --on-active=120 --unit=net-rollback sh -c 'cp /root/netplan-anterior/*.yaml /etc/netplan/ && netplan generate && networkctl reload'
+  sudo systemd-run --on-active=120 --unit=fw-rollback nft -f /etc/nftables.conf.anterior
+  sudo systemctl stop net-rollback.timer fw-rollback.timer   # solo si el acceso sigue
+  ```
+
+- **netplan.** Se aplica con `sudo netplan generate && sudo networkctl reload`, que solo reconfigura las interfaces nuevas o modificadas. En remoto no se usan `netplan apply` ni `netplan try`, porque reinician todas las interfaces, incluida la WAN.
+- **nftables.** Las reglas aceptan siempre `wt0`, el tráfico de NetBird por `enp170s0` y SSH.
+- **sw01.** Se entra por SSH a través de kit01 (`ssh -J <usuario>@<ip-netbird-kit01> admin@10.20.10.2`) y cada cambio se hace en Safe Mode (Ctrl+X), que deshace todo si la sesión se corta.
+- **Sesiones.** Mantener una segunda sesión SSH abierta mientras se aplica, y aplicar en un solo comando lo que pueda cortar la sesión.
 
 ## 7. Commits y textos
 

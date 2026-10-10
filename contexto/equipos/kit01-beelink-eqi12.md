@@ -2,7 +2,7 @@
 
 Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, Chrony, portal) e hipervisor de `clinica01` y `comunidad01`. El diseño de referencia está en `docs/arquitectura/00-punto-de-partida.md`, D-02, D-04, D-14 y sección 6.
 
-**Estado (2026-10-09).** Ubuntu Server instalado, inventario hecho, NetBird conectado y VLAN de gestión hacia sw01 funcionando. Quedan pendientes el hostname, nombres `wan0`/`lan0`, `PermitRootLogin no`, paquetes de virtualización y el resto de la red (`network#3`).
+**Estado (2026-10-09).** Ubuntu Server instalado, inventario hecho, NetBird conectado y VLAN de gestión hacia sw01 funcionando. Quedan pendientes el hostname, `PermitRootLogin no`, paquetes de virtualización y el resto de la red (`network#3`).
 
 ## Identificación y hardware
 
@@ -32,7 +32,7 @@ Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, 
 | SSH | Con contraseña; `PermitRootLogin` en `without-password` (pendiente `no`) |
 | NetBird | 0.80.0, IP `100.90.225.113` |
 | Virtualización (paquetes) | `qemu-kvm` y `libvirt` sin instalar |
-| "Restore on AC power loss" | Pendiente de revisar en la BIOS |
+| "Restore on AC power loss" | Sin revisar; opcional, porque exige ir al laboratorio y se puede encender a mano |
 
 ## Red actual (provisional)
 
@@ -49,11 +49,11 @@ El netplan está en `/etc/netplan/50-cloud-init.yaml` (copia en `network/kit01/n
 
 | Interfaz | Uso | Direcciones |
 |---|---|---|
-| `wan0` | Uplink del sitio | DHCPv4 o fija según el sitio; sin aceptar RA |
-| `lan0` | Trunk hacia sw01 ether1 | Sin dirección propia |
+| `wan0` (`enp170s0`) | Uplink del sitio | DHCPv4 o fija según el sitio; no se modifica en remoto. Acepta RA aunque reenvíe (`accept_ra=2`), y nftables no reenvía IPv6 hacia ella |
+| `lan0` (`enp171s0`) | Trunk hacia sw01 ether1 | Sin dirección propia |
 | `lan0.10` | Interna | `10.20.10.1/24`, `fd5a:fc7e:d716:10::1/64`, `fe80::1` |
-| `lan0.40` | Comunidad | `10.20.40.1/24`, `fd5a:fc7e:d716:40::1/64`, `fe80::1` |
+| `br-com` | Comunidad, con `lan0.40` y la VM `prueba01` como puertos | `10.20.40.1/24`, `fd5a:fc7e:d716:40::1/64`, `fe80::1` |
 | `br-srv` | Red de servidores (sin puerto físico) | `10.20.20.1` y `.10`, `fd5a:fc7e:d716:20::1` y `::10`, `fe80::1` |
 | `wt0` | NetBird | `100.64.0.0/10` |
 
-Los nombres `wan0` y `lan0` se fijan por MAC en netplan.
+`wan0` y `lan0` son nombres de rol; la configuración usa los nombres del kernel, que no cambian mientras no cambie el hardware (D-14).
