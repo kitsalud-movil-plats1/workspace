@@ -67,6 +67,8 @@ Los bridges tienen STP apagado y `forward-delay` 0. El reenvío IPv4 e IPv6 est�
 | Respaldo | `/root/nft-anterior/` (ruleset e iptables antes de aplicar, y el `nftables.conf` original de Ubuntu) |
 | Log | `journalctl -k \| grep fw-drop`; aparece el MNDP de sw01 (`udp/5678` a `255.255.255.255`) como ruido |
 
+Las VMs salen a Internet por 80 y 443, solo IPv4 (F-17), y por el 53 hacia los DNS del sitio mientras no exista BIND9 (regla temporal, se quita en platform#5).
+
 El SSH a kit01 entra por `wt0` o desde las IPs admin `10.20.10.10-29` por IPv4. Desde la WAN y por IPv6 en la Interna está bloqueado.
 
 `wan0` y `lan0` son nombres de rol; la configuración usa los nombres del kernel, que no cambian mientras no cambie el hardware (D-14).

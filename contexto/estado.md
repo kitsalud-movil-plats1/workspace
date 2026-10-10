@@ -1,6 +1,6 @@
 # Estado de implementación
 
-**Última actualización.** 2026-10-10, con las VMs clinica01 y comunidad01 (platform#7)
+**Última actualización.** 2026-10-10, con la prueba de humo de DHIS2 (apps#1)
 
 Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 
@@ -30,15 +30,17 @@ Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 | Laboratorio virtual | ✅ | `kitlab-kit01` y `kitlab-cliente`; VLAN 10 verificada en el trunk | `lab-virtual/`, workspace#1 |
 | Salida a Internet del laboratorio virtual | ⬜ | Depende de la configuración de Docker de cada máquina | `problemas-conocidos.md` |
 | Base de Ansible | ✅ | Inventarios `kit` y `lab`, plan de direcciones en `red.yml`, secretos en `ansible-vault` (contraseña en `~/.config/kitsalud/vault-pass`, fuera del repositorio) y rol `comun` aplicado en kit01 (idempotente). Falta pasar a Ansible la red, el firewall y la base de kit01 | PR platform#19; network#17, platform#20 |
-| Prueba de humo de DHIS2 | ⬜ | Lista para tomar | apps#1 |
+| Prueba de humo de DHIS2 | ✅ | En clinica01: pico de unos 2 GB con 5 usuarios a la vez, 1,65 GB en reposo, arranque de 57 s (25 s con datos). Se mantiene el perfil de referencia (R-03) | apps#9, docs#34 |
 
 ## Servicios
 
 | Componente | Estado | Detalle | Referencia |
 |---|---|---|---|
-| VMs `clinica01` y `comunidad01` | ✅ | Creadas con Ansible (rol `kit01_vms`) en `br-srv`, con IP fija v4/v6, MAC fija, autostart, discos en el LV `vms` y datos en `/srv`; rol `comun` aplicado (SSH solo desde kit01, `ufw`). Sin salida a Internet hasta F-17 | PR platform#21, network#18 |
+| VMs `clinica01` y `comunidad01` | ✅ | Creadas con Ansible (rol `kit01_vms`) en `br-srv`, con IP fija v4/v6, MAC fija, autostart, discos en el LV `vms` y datos en `/srv`; rol `comun` aplicado (SSH solo desde kit01, `ufw`). Salen a Internet por 80 y 443 (F-17) y usan los DNS del sitio hasta BIND9 (`comun_dns_temporal`) | PR platform#21, network#18, network#19, platform#22 |
 
-Los servicios dentro de las VMs (DHIS2, Samba AD, Kiwix, Jellyfin) y los del host (BIND9, Chrony, Kea) están pendientes.
+| DHIS2 en clinica01 | 🟡 | Docker 29.1.3 y Compose 2.40.3 (retenidos), `dhis2/core:2.42.6.0` y `postgis/postgis:16-3.5` con datos en `/srv/dhis2`, roles `docker` y `dhis2`. Detenido después de la prueba, con 2220 pacientes de prueba | apps#9; instalación en apps#2 |
+
+Los demás servicios dentro de las VMs (Samba AD, Kiwix, Jellyfin) y los del host (BIND9, Chrony, Kea) están pendientes. Al hacer platform#5 hay que vaciar `comun_dns_temporal` y quitar la regla de DNS temporal del firewall.
 
 ## Visitas presenciales previstas
 
