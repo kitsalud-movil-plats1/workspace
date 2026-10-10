@@ -2,7 +2,7 @@
 
 Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, Chrony, portal) e hipervisor de `clinica01` y `comunidad01`. El diseño de referencia está en `docs/arquitectura/00-punto-de-partida.md`, D-02, D-04, D-14 y sección 6.
 
-**Estado (2026-10-09).** Ubuntu Server instalado, inventario hecho, NetBird conectado y VLAN de gestión hacia sw01 funcionando. Quedan pendientes el hostname, `PermitRootLogin no`, paquetes de virtualización y el resto de la red (`network#3`).
+**Estado (2026-10-10).** Ubuntu Server instalado y actualizado, hostname `kit01`, SSH sin root, KVM/libvirt instalado, NetBird conectado y VLAN de gestión hacia sw01 funcionando. Quedan pendientes el arranque con el kernel nuevo (P12) y el resto de la red (`network#3`).
 
 ## Identificación y hardware
 
@@ -17,7 +17,7 @@ Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, 
 | Consumo de referencia | ≈ 20 W en reposo, ≈ 60 W a plena carga |
 | Sistema | Ubuntu Server 24.04 LTS (venía con Windows 11 Pro) |
 
-## Datos verificados (2026-10-09)
+## Datos verificados (2026-10-09 y 2026-10-10)
 
 | Dato | Valor |
 |---|---|
@@ -26,12 +26,15 @@ Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, 
 | RAM | 15 GiB utilizables |
 | Disco | NVMe de 476,9 GiB; LVM `ubuntu-vg` de 473,9 GiB con `/` de 100 GiB y el resto libre |
 | NIC | `enp170s0` MAC `78:55:36:09:07:0b` (WAN) y `enp171s0` MAC `78:55:36:09:07:0a` (trunk a sw01 ether1); ambas Realtek RTL8111, controlador `r8169` |
-| Sistema | Ubuntu Server 24.04.5 LTS, kernel 6.8.0-139 |
-| Hostname | `kitsalud-server` (pendiente `kit01`) |
-| Usuario | `kitsalud`, compartido (D-18) |
-| SSH | Con contraseña; `PermitRootLogin` en `without-password` (pendiente `no`) |
-| NetBird | 0.80.0, IP `100.90.225.113` |
-| Virtualización (paquetes) | `qemu-kvm` y `libvirt` sin instalar |
+| Sistema | Ubuntu Server 24.04.5 LTS, actualizado el 2026-10-10. Corre el kernel 6.8.0-139; el 6.8.0-146 está instalado y se activa con el reinicio de P12 |
+| cloud-init | Desactivado (`/etc/cloud/cloud-init.disabled`); no cambia el hostname ni la red al arrancar |
+| Hostname | `kit01`, con `127.0.1.1 kit01.salud.movil kit01` en `/etc/hosts` |
+| Usuario | `kitsalud`, compartido (D-18), con sudo y en los grupos `libvirt` y `kvm` |
+| SSH | Con contraseña y `PermitRootLogin no` (drop-in `/etc/ssh/sshd_config.d/10-kit01.conf`, que gana sobre `50-cloud-init.conf`); escucha en IPv4 e IPv6 |
+| NetBird | 0.80.0, IP `100.90.225.113`; paquete retenido con `apt-mark hold`. Su firewall usa las tablas iptables-nft `ip filter`, `ip nat`, `ip mangle` e `ip raw` |
+| Virtualización (paquetes) | QEMU 8.2.2 (`qemu-system-x86`, que provee `qemu-kvm`), libvirt 10.0.0, virt-install 4.1.0. Red `default` (`virbr0`) detenida y sin arranque automático; libvirt deja los saltos a cadenas `LIBVIRT_*` vacías |
+| `virt-host-validate qemu` | Todo `PASS` (IOMMU incluido, el kernel lo activa por defecto) salvo `WARN` de "secure guest support" |
+| Respaldo de la instalación | `/root/respaldo-platform2/` (hostname, hosts, `sshd_config.d`, `dpkg -l` e iptables antes y después) |
 | "Restore on AC power loss" | Sin revisar; opcional, porque exige ir al laboratorio y se puede encender a mano |
 
 ## Red actual (provisional)
