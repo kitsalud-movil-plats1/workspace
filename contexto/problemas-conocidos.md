@@ -133,3 +133,21 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Con la contraseña nueva en el vault y en `.env`, `dhis2-core-1` no arranca y el log muestra `password authentication failed`.
 - **Causa.** `POSTGRES_PASSWORD` solo se usa al crear la base; PostgreSQL conserva la contraseña anterior.
 - **Solución.** Con `db` arriba, `docker compose exec -T db psql -U dhis -d dhis2 -c "ALTER USER dhis PASSWORD '...'"` tomando el valor del vault, y después levantar `core`.
+
+## La inversa de 10.20.0.0/16 no es 10.20.in-addr.arpa
+
+- **Síntoma.** Un `dig -x 10.20.10.1` no encuentra la zona inversa aunque esté cargada.
+- **Causa.** En `in-addr.arpa` los octetos van al revés: `10.20.10.1` es `1.10.20.10.in-addr.arpa`, así que la zona de `10.20.0.0/16` es `20.10.in-addr.arpa`.
+- **Solución.** Usar `20.10.in-addr.arpa`. El rol `bind9` calcula los nombres con `ipaddress` (filtro `nombre_ptr`) y falla si una IP no pertenece a la zona.
+
+## sw01 no puede pedir registros AAAA
+
+- **Síntoma.** En RouterOS 7.13, `:resolve ... type=ipv6` da `expected end of command`.
+- **Causa.** Esa versión de `:resolve` solo devuelve registros A.
+- **Solución.** Desde sw01 se prueba el transporte IPv6 con `server=fd5a:fc7e:d716:20::10`. Los AAAA se prueban desde kit01, las VMs o un cliente de la red.
+
+## `pkill -f` corta la propia sesión
+
+- **Síntoma.** Un comando remoto con `pkill -f "<patrón>"` termina con código 143 o 144 y no muestra salida.
+- **Causa.** La línea de comando de la propia sesión contiene el patrón, así que `pkill` también la mata.
+- **Solución.** Matar por PID (`pgrep` y `kill`) o usar un patrón que no aparezca en el comando, por ejemplo `pkill -f "[m]edir.sh"`.

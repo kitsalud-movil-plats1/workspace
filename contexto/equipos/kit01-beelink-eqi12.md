@@ -33,6 +33,7 @@ Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, 
 | SSH | Con contraseña y `PermitRootLogin no` (drop-in `/etc/ssh/sshd_config.d/10-comun.conf` del rol `comun` de Ansible, que gana sobre `50-cloud-init.conf`); escucha en IPv4 e IPv6. Copia del drop-in anterior en `/root/ssh-anterior/` |
 | Zona horaria | `America/Bogota` (rol `comun`; antes `Etc/UTC`) |
 | Ansible | Se administra desde `platform/ansible` con `ansible-playbook playbooks/comun.yml` (inventario `kit`, conexión por NetBird con el usuario compartido y el vault) |
+| DNS | BIND9 9.18.39 (`named`, retenido) solo en `10.20.20.10:53` y `[fd5a:fc7e:d716:20::10]:53`. El 53 también lo usan NetBird (`100.90.225.113`) y systemd-resolved (`127.0.0.53`, `127.0.0.54`). kit01 mismo resuelve con los DNS del sitio (`192.168.215.20` y `.30`). Logs en `/var/log/named/` |
 | Almacenamiento de VMs | LV `ubuntu-vg/vms` de 320 GiB (ext4, etiqueta `vms`) en `/var/lib/libvirt/images`, con `nofail` en `fstab`. Quedan unos 54 GiB libres en el VG. Imagen base en `base/` |
 | VMs | `clinica01` (4 vCPU, 7 GB, MAC `52:54:00:20:00:11`, `vnet` en `br-srv`) y `comunidad01` (2 vCPU, 2,5 GB, MAC `52:54:00:20:00:12`), las dos con autostart. Con las dos encendidas, kit01 usa unos 2,3 GiB y tiene 13 GiB disponibles en reposo |
 | NetBird | 0.80.0, IP `100.90.225.113`; paquete retenido con `apt-mark hold`. Su firewall usa las tablas iptables-nft `ip filter`, `ip nat`, `ip mangle` e `ip raw` |
@@ -67,7 +68,7 @@ Los bridges tienen STP apagado y `forward-delay` 0. El reenvío IPv4 e IPv6 est�
 | Respaldo | `/root/nft-anterior/` (ruleset e iptables antes de aplicar, y el `nftables.conf` original de Ubuntu) |
 | Log | `journalctl -k \| grep fw-drop`; aparece el MNDP de sw01 (`udp/5678` a `255.255.255.255`) como ruido |
 
-Las VMs salen a Internet por 80 y 443, solo IPv4 (F-17), y por el 53 hacia los DNS del sitio mientras no exista BIND9 (regla temporal, se quita en platform#5).
+Las VMs salen a Internet por 80 y 443, solo IPv4 (F-17). Resuelven por BIND9 en kit01 y no pueden consultar DNS de afuera.
 
 El SSH a kit01 entra por `wt0` o desde las IPs admin `10.20.10.10-29` por IPv4. Desde la WAN y por IPv6 en la Interna está bloqueado.
 

@@ -1,6 +1,6 @@
 # Estado de implementación
 
-**Última actualización.** 2026-10-10, con la prueba de humo de DHIS2 (apps#1)
+**Última actualización.** 2026-10-10, con BIND9 en kit01 (platform#5)
 
 Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 
@@ -36,11 +36,12 @@ Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 
 | Componente | Estado | Detalle | Referencia |
 |---|---|---|---|
-| VMs `clinica01` y `comunidad01` | ✅ | Creadas con Ansible (rol `kit01_vms`) en `br-srv`, con IP fija v4/v6, MAC fija, autostart, discos en el LV `vms` y datos en `/srv`; rol `comun` aplicado (SSH solo desde kit01, `ufw`). Salen a Internet por 80 y 443 (F-17) y usan los DNS del sitio hasta BIND9 (`comun_dns_temporal`) | PR platform#21, network#18, network#19, platform#22 |
+| VMs `clinica01` y `comunidad01` | ✅ | Creadas con Ansible (rol `kit01_vms`) en `br-srv`, con IP fija v4/v6, MAC fija, autostart, discos en el LV `vms` y datos en `/srv`; rol `comun` aplicado (SSH solo desde kit01, `ufw`). Salen a Internet por 80 y 443 (F-17) y resuelven por BIND9 en kit01 | PR platform#21, network#18, network#19, platform#22 |
 
+| DNS (BIND9 en kit01) | ✅ | Zona `salud.movil` e inversas `20.10.in-addr.arpa` y `6.1.7.d.e.7.c.f.a.5.d.f.ip6.arpa`, solo en `10.20.20.10` y `::10`, recursión para el kit, reenviadores `1.1.1.1` y `9.9.9.9` con DNSSEC, log de consultas; responde sin WAN. Falta la delegación de `ad` (platform#8) y la detección de portal (network#9) | platform#23, network#20, docs#35 |
 | DHIS2 en clinica01 | 🟡 | Docker 29.1.3 y Compose 2.40.3 (retenidos), `dhis2/core:2.42.6.0` y `postgis/postgis:16-3.5` con datos en `/srv/dhis2`, roles `docker` y `dhis2`. Detenido después de la prueba, con 2220 pacientes de prueba | apps#9; instalación en apps#2 |
 
-Los demás servicios dentro de las VMs (Samba AD, Kiwix, Jellyfin) y los del host (BIND9, Chrony, Kea) están pendientes. Al hacer platform#5 hay que vaciar `comun_dns_temporal` y quitar la regla de DNS temporal del firewall.
+Los demás servicios dentro de las VMs (Samba AD, Kiwix, Jellyfin) y los del host (Chrony, Kea, radvd) están pendientes. kit01 sigue resolviendo con los DNS del sitio; pasarlo a BIND9 se propone aparte porque cambia cómo resuelve NetBird.
 
 ## Visitas presenciales previstas
 
