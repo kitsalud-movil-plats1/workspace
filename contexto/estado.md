@@ -1,6 +1,6 @@
 # Estado de implementación
 
-**Última actualización.** 2026-10-10, con BIND9 en kit01 (platform#5)
+**Última actualización.** 2026-10-11, con Chrony en kit01 (platform#6)
 
 Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 
@@ -18,8 +18,8 @@ Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 | Equipo | Estado | Hecho | Pendiente | Referencia |
 |---|---|---|---|---|
 | kit01 (Beelink EQi12) | 🟡 | Ubuntu 24.04.5 actualizado, hostname `kit01`, `PermitRootLogin no` (rol `comun`), zona horaria `America/Bogota`, KVM/libvirt (QEMU 8.2.2, libvirt 10.0.0, `virt-host-validate` sin `FAIL`), red `default` de libvirt desactivada, `netbird` retenido; inventario, NetBird (`100.90.225.113`); red interna completa (`lan0.10`, `br-com` con `lan0.40`, `br-srv` con `srv-dummy0`, `fe80::1` en las tres), reenvío IPv4 e IPv6, WAN sin RA; firewall base (`inet filtro` y NAT en `ip nat_kit`, persistente, sin tocar las tablas de iptables-nft de NetBird) | Arrancar con el kernel 6.8.0-146 y comprobar la red y el firewall tras el reinicio (P12); matriz de flujos (network#10) | platform#1, #3, PR platform#18; PR network#15, PR network#16 |
-| sw01 (CCR2004) | 🟡 | Configuración base con bridge y VLAN filtering, puertos, gestión `10.20.10.2`, sin reenvío IP, servicios limitados; ether2 híbrido | DHCP snooping, filtro de RA, hora | network#2, network#11 |
-| ap01 (TL-WA801ND v3) | 🟡 | Configurado (Multi-SSID 10/40, DHCP propio apagado, IP `10.20.10.3`); gestión verificada desde kit01 | Clientes en cada SSID (necesita Kea), aislamiento | network#7 |
+| sw01 (CCR2004) | 🟡 | Configuración base con bridge y VLAN filtering, puertos, gestión `10.20.10.2`, sin reenvío IP, servicios limitados; ether2 híbrido; hora por NTP desde kit01 | DHCP snooping, filtro de RA | network#2, network#11 |
+| ap01 (TL-WA801ND v3) | 🟡 | Configurado (Multi-SSID 10/40, DHCP propio apagado, IP `10.20.10.3`); gestión verificada desde kit01; sin cliente NTP (el firmware no tiene ajustes de hora) | Clientes en cada SSID (necesita Kea), aislamiento | network#7 |
 | Conexión física | 🟡 | kit01 `enp171s0` ↔ ether1; AP ↔ ether2; `enp170s0` ↔ red del laboratorio | Etiquetas, fotos, disco USB | network#1 |
 | Uplink del laboratorio | 🟡 | `192.168.160.0/24`, kit01 fija `.69`, DNS `192.168.215.20/.30`, anuncia IPv6 `2001:db8:a:c::/64` | Confirmar si pasa por el RB3011 (Q-09) | docs#26 |
 
@@ -39,9 +39,10 @@ Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 | VMs `clinica01` y `comunidad01` | ✅ | Creadas con Ansible (rol `kit01_vms`) en `br-srv`, con IP fija v4/v6, MAC fija, autostart, discos en el LV `vms` y datos en `/srv`; rol `comun` aplicado (SSH solo desde kit01, `ufw`). Salen a Internet por 80 y 443 (F-17) y resuelven por BIND9 en kit01 | PR platform#21, network#18, network#19, platform#22 |
 
 | DNS (BIND9 en kit01) | ✅ | Zona `salud.movil` e inversas `20.10.in-addr.arpa` y `6.1.7.d.e.7.c.f.a.5.d.f.ip6.arpa`, solo en `10.20.20.10` y `::10`, recursión para el kit, reenviadores `1.1.1.1` y `9.9.9.9` con DNSSEC, log de consultas; responde sin WAN. Falta la delegación de `ad` (platform#8) y la detección de portal (network#9) | platform#23, network#20, docs#35 |
+| NTP (Chrony en kit01) | ✅ | Servidor en `.10` y `::10` con el pool y `local stratum 10 orphan`; clientes clinica01, comunidad01 y sw01. Sin NTP externo 9 minutos, todo siguió sincronizado | platform#24, network#21, docs#36 |
 | DHIS2 en clinica01 | 🟡 | Docker 29.1.3 y Compose 2.40.3 (retenidos), `dhis2/core:2.42.6.0` y `postgis/postgis:16-3.5` con datos en `/srv/dhis2`, roles `docker` y `dhis2`. Detenido después de la prueba, con 2220 pacientes de prueba | apps#9; instalación en apps#2 |
 
-Los demás servicios dentro de las VMs (Samba AD, Kiwix, Jellyfin) y los del host (Chrony, Kea, radvd) están pendientes. kit01 sigue resolviendo con los DNS del sitio; pasarlo a BIND9 se propone aparte porque cambia cómo resuelve NetBird.
+Los demás servicios dentro de las VMs (Samba AD, Kiwix, Jellyfin) y los del host (Kea, radvd) están pendientes. kit01 sigue resolviendo con los DNS del sitio; pasarlo a BIND9 se propone aparte porque cambia cómo resuelve NetBird.
 
 ## Visitas presenciales previstas
 
