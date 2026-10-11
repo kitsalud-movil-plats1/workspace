@@ -151,3 +151,9 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Un comando remoto con `pkill -f "<patrón>"` termina con código 143 o 144 y no muestra salida.
 - **Causa.** La línea de comando de la propia sesión contiene el patrón, así que `pkill` también la mata.
 - **Solución.** Matar por PID (`pgrep` y `kill`) o usar un patrón que no aparezca en el comando, por ejemplo `pkill -f "[m]edir.sh"`.
+
+## `chronyc sources` muestra `ns1.salud.movil` en vez de `ntp.salud.movil`
+
+- **Síntoma.** En una VM, `chronyc sources` lista `ns1.salud.movil` aunque la configuración dice `server ntp.salud.movil`.
+- **Causa.** `chronyc` muestra el nombre que sale de resolver la IP al revés, y el PTR de `10.20.20.10` es `ns1`.
+- **Solución.** Ninguna; es la misma fuente. `chronyc -N sources` muestra el nombre configurado.

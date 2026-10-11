@@ -46,7 +46,8 @@ Para restablecerlo se usa el botón **Reset** (mantener unos 5 segundos con el e
 | System Tools → Diagnostic | Ping y traceroute desde el AP |
 | System Tools → Ping Watch Dog | Reinicia el AP si deja de responder una IP |
 | System Tools → Firmware Upgrade / Factory Defaults / Backup & Restore | Actualización, restablecimiento, respaldo de la configuración (archivo) |
-| System Tools → Time Settings, Password, System Log, Reboot | Según el manual del fabricante; no se capturaron de la interfaz real (pendiente de confirmar en la configuración) |
+| System Tools → Password, System Log, Reboot | Confirmados en el menú real (`ChangeLoginPwdRpm`, `SystemLogRpm`, `SysRebootRpm`) |
+| Time Settings | **No existe** en el firmware 3.16.9: el menú no tiene ninguna página de hora, así que el AP no es cliente NTP (2026-10-11) |
 
 Los modos de operación son Access Point, **Multi-SSID**, Client, WDS Repeater, Universal Repeater, Bridge with AP.
 
@@ -89,3 +90,11 @@ Los modos de operación son Access Point, **Multi-SSID**, Client, WDS Repeater, 
 - Solo 2,4 GHz y puerto de 100 Mb/s, que lo hacen el cuello de botella del kit (R-13).
 - Sin WPA3; gestión solo por HTTP e IPv4; sin syslog remoto (el registro se consulta en su página).
 - AP Isolation es global (aplica a todos los SSID).
+
+## Acceso a la interfaz por HTTP desde kit01 (sin navegador)
+
+Verificado el 2026-10-11 para leer el menú.
+- **Inicio de sesión.** La cookie es `Authorization=Basic%20<base64("admin:" + md5(contraseña))>`. Con ella se pide `http://10.20.10.3/userRpm/LoginRpm.htm?Save=Save`, y la respuesta trae una ruta de sesión `http://10.20.10.3/<SESIÓN>/userRpm/Index.htm`.
+- **Orden de las páginas.** Cada página se pide con `Referer` igual a `.../<SESIÓN>/userRpm/Index.htm`, y hay que cargar `Index.htm` antes de cualquier otra. Si no, el AP responde con un script que borra la cookie y redirige al inicio de sesión.
+- **Páginas del menú.** `SnmpRpm`, `DiagnosticRpm`, `SysRebootRpm`, `PingWatchDogRpm`, `SystemLogRpm`, `RestoreDefaultCfgRpm`, `ChangeLoginPwdRpm`, `BakNRestoreRpm`, `SoftwareUpgradeRpm`, `FixMapCfgRpm`, `AssignedIpAddrListRpm`, `LanDhcpServerRpm`, `NetworkCfgRpm`, `WlanThroughputRpm`, `WlanAdvRpm`, `WpsCfgRpm`, `WlanStationRpm`, `WlanMacFilterRpm`, `WlanSecurityRpm`, `WlanNetworkRpm`, `StatusRpm` y `WzdStartRpm`.
+- **Cierre.** Al terminar se cierra la sesión con `LogoutRpm.htm`.
