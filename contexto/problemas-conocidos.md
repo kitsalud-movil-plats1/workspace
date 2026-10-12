@@ -157,3 +157,20 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** En una VM, `chronyc sources` lista `ns1.salud.movil` aunque la configuración dice `server ntp.salud.movil`.
 - **Causa.** `chronyc` muestra el nombre que sale de resolver la IP al revés, y el PTR de `10.20.20.10` es `ns1`.
 - **Solución.** Ninguna; es la misma fuente. `chronyc -N sources` muestra el nombre configurado.
+
+## `kea-dhcp4 -t` no puede abrir el archivo que valida Ansible
+
+- **Síntoma.** El `validate` de la plantilla falla con `Unable to open file /home/<usuario>/.ansible/tmp/.../.source.conf`, y el kernel registra denegaciones de AppArmor para `kea`.
+- **Causa.** El perfil de AppArmor de `kea-dhcp4` solo le deja leer sus rutas, como `/etc/kea/`.
+- **Solución.** Validar una copia temporal en `/etc/kea/` (así lo hace el rol `kea_dhcp4`).
+
+## Kea 2.4 no acepta `output-options` en los loggers
+
+- **Síntoma.** `kea-dhcp4 -t` falla con `got unexpected keyword "output-options" in loggers map`.
+- **Causa.** En Kea 2.4 la clave es `output_options`, con guion bajo.
+- **Solución.** Usar `output_options`.
+
+## Instalar paquetes en el laboratorio virtual sin Internet
+
+- **Síntoma.** `apt` no funciona en `kitlab-kit01` en máquinas con Docker (ver "El laboratorio virtual no sale a Internet").
+- **Solución.** Descargar los `.deb` en kit01, que solo trae los que le faltan: `apt-get install -y --download-only -o Dir::Cache::archives=/tmp/debs <paquete>=<versión>`. Después se copian al laboratorio y se instalan con `dpkg -i`. Los roles saltan apt cuando el paquete ya tiene la versión fija.
