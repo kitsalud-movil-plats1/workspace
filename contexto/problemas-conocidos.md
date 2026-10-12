@@ -174,3 +174,9 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 
 - **Síntoma.** `apt` no funciona en `kitlab-kit01` en máquinas con Docker (ver "El laboratorio virtual no sale a Internet").
 - **Solución.** Descargar los `.deb` en kit01, que solo trae los que le faltan: `apt-get install -y --download-only -o Dir::Cache::archives=/tmp/debs <paquete>=<versión>`. Después se copian al laboratorio y se instalan con `dpkg -i`. Los roles saltan apt cuando el paquete ya tiene la versión fija.
+
+## Kea DHCPv6 responde desde otra link-local
+
+- **Síntoma.** En una captura, la `dhcp6 reply` sale desde `fe80::<derivada de la MAC>` en vez de `fe80::1` (pasó en el laboratorio virtual).
+- **Causa.** Kea escucha en todas las link-local de la interfaz y responde desde la primera que encuentra. En kit01 es `fe80::1`.
+- **Solución.** No afecta a los clientes, porque la ruta por defecto la fija el RA, que sale siempre desde `fe80::1` (`AdvRASrcAddress`). Si hiciera falta, se revisa el orden de las direcciones con `ip -6 addr show <interfaz>`.
