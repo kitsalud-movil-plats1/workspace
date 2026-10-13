@@ -180,3 +180,27 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** En una captura, la `dhcp6 reply` sale desde `fe80::<derivada de la MAC>` en vez de `fe80::1` (pasó en el laboratorio virtual).
 - **Causa.** Kea escucha en todas las link-local de la interfaz y responde desde la primera que encuentra. En kit01 es `fe80::1`.
 - **Solución.** No afecta a los clientes, porque la ruta por defecto la fija el RA, que sale siempre desde `fe80::1` (`AdvRASrcAddress`). Si hiciera falta, se revisa el orden de las direcciones con `ip -6 addr show <interfaz>`.
+
+## Una subzona delegada desde BIND9 se consulta a los reenviadores
+
+- **Síntoma.** Con `forward first` en las opciones, las consultas de una subzona delegada desde una zona propia (como `ad.salud.movil`) van primero a `1.1.1.1` y `9.9.9.9`, y la validación DNSSEC puede devolver `SERVFAIL` porque la subzona no está firmada y `movil` no es un TLD real.
+- **Causa.** Los `forwarders` globales también aplican a los nombres delegados, y `dnssec-validation auto` intenta validar la cadena desde la raíz.
+- **Solución.** `forwarders { };` en la zona `salud.movil` y `validate-except { "salud.movil"; };` en las opciones (rol `bind9`).
+
+## `samba-tool domain provision` rechaza la contraseña de Administrator
+
+- **Síntoma.** Con `--adminpass` y una clave académica, el aprovisionamiento falla porque la contraseña no cumple la calidad por defecto.
+- **Causa.** La política de fábrica exige complejidad y solo se puede cambiar cuando el dominio ya existe.
+- **Solución.** Aprovisionar sin `--adminpass`, aplicar la política con `samba-tool domain passwordsettings set` y fijar la clave con `samba-tool user setpassword`. Así lo hace el rol `samba_ad`.
+
+## `kinit` dice `Cannot find KDC` con un `krb5.conf` de prueba
+
+- **Síntoma.** Con un `krb5.conf` propio (`KRB5_CONFIG`) para forzar el KDC por IPv4 o IPv6, `kinit` responde `Cannot find KDC for realm "AD.SALUD.MOVIL"`.
+- **Causa.** MIT Kerberos no lee el bloque del realm escrito en una sola línea (`AD.SALUD.MOVIL = { kdc = ... }`).
+- **Solución.** Escribir el bloque en varias líneas, con `kdc = [fd5a:fc7e:d716:20::11]` en una línea propia.
+
+## Un usuario de Samba AD queda bloqueado durante las pruebas
+
+- **Síntoma.** `kinit` o `smbclient` fallan con la clave correcta y `samba-tool user show <usuario>` muestra `lockoutTime` distinto de `0`.
+- **Causa.** La política bloquea la cuenta 15 minutos después de 5 intentos fallidos, y las pruebas del log de autenticación suman intentos (también un comando con la variable de la clave vacía).
+- **Solución.** `sudo samba-tool user unlock <usuario>` o esperar 15 minutos. Para las pruebas de fallos, usar un usuario distinto del que se usa para las pruebas exitosas.
