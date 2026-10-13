@@ -1,6 +1,6 @@
 # Estado de implementación
 
-**Última actualización.** 2026-10-12, con radvd y DHCPv6 sin estado (network#6)
+**Última actualización.** 2026-10-13, con Samba AD DC en clinica01 (platform#8)
 
 Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 
@@ -41,11 +41,12 @@ Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 | VM `prueba01` | ✅ | En `br-com` (MAC `52:54:00:40:00:50`), apagada y sin autostart; se enciende con `playbooks/prueba01.yml` y se entra desde kit01 por su link-local. Recibe `10.20.40.100` por DHCPv4 y `fd5a:fc7e:d716:40:5054:ff:fe40:50` por SLAAC, con DNS y NTP por DHCPv4 y DHCPv6 | platform#25 |
 | IPv6 de clientes (radvd y Kea DHCPv6) | ✅ | RA desde `fe80::1` en `lan0.10` y `br-com` (A=1, M=0, O=1, sin RDNSS); DHCPv6 sin estado con DNS, búsqueda y NTP. Probado en la Comunidad con `prueba01` y en la Interna en el laboratorio virtual. Falta Android y un cliente real de la Interna (visita) | network#23, platform#27 |
 | DHCPv4 (Kea en kit01) | ✅ | Solo en `lan0.10` y `br-com`; pools `.100-.199` (8 h) y `.100-.250` (1 h), DNS, dominio y NTP; reservas desde `dhcp_reservas` (vacía hasta tener las MAC de administración). Probado en la Comunidad con `prueba01` y en la Interna en el laboratorio virtual. Falta un cliente real de la Interna (visita) | network#22, platform#26 |
-| DNS (BIND9 en kit01) | ✅ | Zona `salud.movil` e inversas `20.10.in-addr.arpa` y `6.1.7.d.e.7.c.f.a.5.d.f.ip6.arpa`, solo en `10.20.20.10` y `::10`, recursión para el kit, reenviadores `1.1.1.1` y `9.9.9.9` con DNSSEC, log de consultas; responde sin WAN. Falta la delegación de `ad` (platform#8) y la detección de portal (network#9) | platform#23, network#20, docs#35 |
+| DNS (BIND9 en kit01) | ✅ | Zona `salud.movil` e inversas `20.10.in-addr.arpa` y `6.1.7.d.e.7.c.f.a.5.d.f.ip6.arpa`, solo en `10.20.20.10` y `::10`, recursión para el kit, reenviadores `1.1.1.1` y `9.9.9.9` con DNSSEC, log de consultas; responde sin WAN. `ad.salud.movil` delegada a Samba AD en clinica01 (sin reenviadores ni validación DNSSEC para `salud.movil`). Falta la detección de portal (network#9) | platform#23, network#20, docs#35 |
 | NTP (Chrony en kit01) | ✅ | Servidor en `.10` y `::10` con el pool y `local stratum 10 orphan`; clientes clinica01, comunidad01 y sw01. Sin NTP externo 9 minutos, todo siguió sincronizado | platform#24, network#21, docs#36 |
+| Samba AD DC en clinica01 | ✅ | Samba 4.19.5 (retenido), realm `AD.SALUD.MOVIL`, DC `dc01.ad.salud.movil` con DNS interno, solo en `lo`, `.11` y `::11`; ufw abre el 53 solo a kit01 (F-25). Grupos `clinicos` y `admins`, usuarios de prueba `ana.rojas`, `carlos.perez` y `laura.gomez`; política sin complejidad, mínimo 8, bloqueo tras 5 intentos por 15 min. `kinit` por IPv4 e IPv6 y fallos en `/var/log/samba/auth.log`. Usa unos 50 MB de RAM (R-09). Faltan los recursos SMB (platform#9) y el backup del dominio (platform#11) | PR platform#28, docs#37 (v0.17) |
 | DHIS2 en clinica01 | 🟡 | Docker 29.1.3 y Compose 2.40.3 (retenidos), `dhis2/core:2.42.6.0` y `postgis/postgis:16-3.5` con datos en `/srv/dhis2`, roles `docker` y `dhis2`. Detenido después de la prueba, con 2220 pacientes de prueba | apps#9; instalación en apps#2 |
 
-Los demás servicios dentro de las VMs (Samba AD, Kiwix, Jellyfin) y los del host (portal, Prometheus, Grafana, rsyslog, NUT, backups) están pendientes. kit01 sigue resolviendo con los DNS del sitio; pasarlo a BIND9 se propone aparte porque cambia cómo resuelve NetBird.
+Los demás servicios dentro de las VMs (recursos SMB, Kiwix, Jellyfin) y los del host (portal, Prometheus, Grafana, rsyslog, NUT, backups) están pendientes. kit01 sigue resolviendo con los DNS del sitio; pasarlo a BIND9 se propone aparte porque cambia cómo resuelve NetBird.
 
 ## Visitas presenciales previstas
 
