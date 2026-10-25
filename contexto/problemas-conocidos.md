@@ -270,3 +270,15 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Después de cambiar la CA de Caddy (bloque `pki`), `openssl s_client` muestra todavía el emisor viejo.
 - **Causa.** Caddy guarda los certificados emitidos en `data/caddy/certificates/local` y los sirve hasta renovarlos.
 - **Solución.** Borrar esa carpeta y reiniciar Caddy. El rol `ca_interna` lo hace solo cuando cambia el intermedio.
+
+## El 5432 publicado por Docker no respeta ufw y pierde el origen por IPv6
+
+- **Síntoma.** Las reglas de ufw para el 5432 de clinica01 no cambian nada, y por IPv6 PostgreSQL ve la conexión como si viniera de la red de Docker (`172.x`), así que `pg_hba.conf` no puede filtrar por la IP de comunidad01.
+- **Causa.** Docker publica los puertos con sus propias cadenas de iptables, antes de las de ufw. Si la red del Compose no tiene IPv6, el puerto publicado por IPv6 lo atiende `docker-proxy`, que cambia el origen.
+- **Solución.** Activar IPv6 en la red del Compose con una subred fija (`enable_ipv6` e `ipam`) y filtrar en `pg_hba.conf` por las IP de comunidad01. Para cambiar las subredes hay que hacer antes `docker compose down`.
+
+## La app de formularios se reconstruye al cambiar la documentación
+
+- **Síntoma.** Editar el README de `apps/comunidad01/formularios/` hace que la siguiente pasada reconstruya la imagen.
+- **Causa.** El rol copiaba toda la carpeta, y cualquier cambio marcaba el código como cambiado.
+- **Solución.** El rol copia solo `Dockerfile`, `requirements.txt`, `app.py`, `compose.yml`, `templates/` y `static/`. Un archivo nuevo que entre en la imagen se agrega a esa lista.
