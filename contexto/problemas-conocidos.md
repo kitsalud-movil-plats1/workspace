@@ -234,3 +234,27 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** En kit01, `curl http://biblioteca.salud.movil/` falla con código `000`, aunque desde la Interna funciona.
 - **Causa.** kit01 sigue resolviendo con los DNS del sitio, que no conocen la zona del kit.
 - **Solución.** Resolver con BIND9 (`dig -b 10.20.10.1 @10.20.20.10 biblioteca.salud.movil`) y pasar la IP a `curl --resolve`, con `--interface 10.20.10.1` o `fd5a:fc7e:d716:10::1` para salir con una dirección de la Interna.
+
+## DHIS2 rechaza la clave con `Password must not have any generic word`
+
+- **Síntoma.** `PUT /api/me/changePassword` o `POST /api/users` responden `409` con una clave como `Password123!`.
+- **Causa.** Además de mayúscula, número y símbolo, la política de DHIS2 rechaza palabras genéricas como `password`, `admin`, `user` o `dhis`.
+- **Solución.** Usar la clave alternativa de la convención del grupo y probarla antes con `POST /api/account/validatePassword` (`--data-urlencode password=...`).
+
+## DHIS2 redirige a `http://` detrás de Caddy
+
+- **Síntoma.** `https://pacientes.salud.movil/` responde `302` hacia `http://pacientes.salud.movil/dhis-web-login/`, o un túnel en otro puerto pierde el puerto.
+- **Causa.** El Tomcat de la imagen `dhis2/core` no mira `X-Forwarded-Proto` ni `X-Forwarded-Port`; `server.https = on` en `dhis.conf` no lo cambia.
+- **Solución.** Montar un `context.xml` con `RemoteIpValve` (`protocolHeader` y `portHeader`) y que Caddy mande `header_up X-Forwarded-Port {http.request.port}` (`apps/clinica01/dhis2/context.xml`).
+
+## `/tool fetch` de sw01 falla por HTTPS hacia una IP
+
+- **Síntoma.** `/tool fetch url="https://10.20.20.11/..."` termina en `error` aunque el contador de nftables sube, y por nombre falla con `dns server failure`.
+- **Causa.** Con una IP en la URL RouterOS no manda SNI y Caddy no sabe qué certificado dar; sw01 no resuelve los nombres de `salud.movil`.
+- **Solución.** `default_sni pacientes.salud.movil` en el Caddyfile de clinica01, y en el fetch `http-header-field="Host: pacientes.salud.movil" check-certificate=no`.
+
+## Dos ejecuciones de Ansible a la vez sobre la misma VM
+
+- **Síntoma.** Una segunda pasada para comprobar la idempotencia termina con `changed` en archivos que se editaron mientras corría, y la pasada siguiente da `changed=0` sin haber aplicado nada nuevo.
+- **Causa.** `copy` y `template` leen el archivo del repositorio cuando llega su tarea, no al empezar el playbook.
+- **Solución.** No editar archivos de un rol mientras corre un playbook que lo usa, y no lanzar dos playbooks a la vez sobre la misma VM.
