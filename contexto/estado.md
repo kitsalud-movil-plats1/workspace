@@ -1,6 +1,6 @@
 # Estado de implementación
 
-**Última actualización.** 2026-10-13, con Samba AD DC en clinica01 (platform#8)
+**Última actualización.** 2026-10-25, con los recursos SMB en clinica01 (platform#9)
 
 Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 
@@ -8,16 +8,16 @@ Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 
 | Componente | Estado | Detalle | Referencia |
 |---|---|---|---|
-| Documento de arquitectura | ✅ | v0.10 en `main` (operación remota, `br-com` y VM `prueba01`) | `docs`, PR docs#30 |
+| Documento de arquitectura | ✅ | v0.18 (recursos SMB en R9) | `docs`, PR docs#39 |
 | Diagramas | ✅ | draw.io, con el hardware real | `docs/diagramas/` |
 | Tablero, repositorios y permisos | ✅ | `main` protegida; equipo `integrantes` con escritura | [Project 1](https://github.com/orgs/kitsalud-movil-plats1/projects/1) |
-| Presentación de la entrega de diseño | ⬜ | Lista para tomar | docs#9 |
+| Presentación de la entrega de diseño | ✅ | Expuesta el 19 de octubre; PDF de 41 diapositivas en `docs/sustentacion/entrega-diseno/` y fuente en Figma Slides | docs#9, PR docs#38 |
 
 ## Equipos (primera sesión)
 
 | Equipo | Estado | Hecho | Pendiente | Referencia |
 |---|---|---|---|---|
-| kit01 (Beelink EQi12) | 🟡 | Ubuntu 24.04.5 actualizado, hostname `kit01`, `PermitRootLogin no` (rol `comun`), zona horaria `America/Bogota`, KVM/libvirt (QEMU 8.2.2, libvirt 10.0.0, `virt-host-validate` sin `FAIL`), red `default` de libvirt desactivada, `netbird` retenido; inventario, NetBird (`100.90.225.113`); red interna completa (`lan0.10`, `br-com` con `lan0.40`, `br-srv` con `srv-dummy0`, `fe80::1` en las tres), reenvío IPv4 e IPv6, WAN sin RA; firewall base (`inet filtro` y NAT en `ip nat_kit`, persistente, sin tocar las tablas de iptables-nft de NetBird) | Arrancar con el kernel 6.8.0-146 y comprobar la red y el firewall tras el reinicio (P12); matriz de flujos (network#10) | platform#1, #3, PR platform#18; PR network#15, PR network#16 |
+| kit01 (Beelink EQi12) | 🟡 | Ubuntu 24.04.5 actualizado, hostname `kit01`, `PermitRootLogin no` (rol `comun`), zona horaria `America/Bogota`, KVM/libvirt (QEMU 8.2.2, libvirt 10.0.0, `virt-host-validate` sin `FAIL`), red `default` de libvirt desactivada, `netbird` retenido; inventario, NetBird (`100.90.225.113`); red interna completa (`lan0.10`, `br-com` con `lan0.40`, `br-srv` con `srv-dummy0`, `fe80::1` en las tres), reenvío IPv4 e IPv6, WAN sin RA; firewall base (`inet filtro` y NAT en `ip nat_kit`, persistente, sin tocar las tablas de iptables-nft de NetBird), con el 445 de la Interna hacia clinica01 (F-05) | Arrancar con el kernel 6.8.0-146 y comprobar la red y el firewall tras el reinicio (P12); matriz de flujos (network#10) | platform#1, #3, PR platform#18; PR network#15, PR network#16, PR network#24 |
 | sw01 (CCR2004) | 🟡 | Configuración base con bridge y VLAN filtering, puertos, gestión `10.20.10.2`, sin reenvío IP, servicios limitados; ether2 híbrido; hora por NTP desde kit01 | DHCP snooping, filtro de RA | network#2, network#11 |
 | ap01 (TL-WA801ND v3) | 🟡 | Configurado (Multi-SSID 10/40, DHCP propio apagado, IP `10.20.10.3`); gestión verificada desde kit01; sin cliente NTP (el firmware no tiene ajustes de hora) | Clientes en cada SSID (necesita Kea), aislamiento | network#7 |
 | Conexión física | 🟡 | kit01 `enp171s0` ↔ ether1; AP ↔ ether2; `enp170s0` ↔ red del laboratorio | Etiquetas, fotos, disco USB | network#1 |
@@ -43,10 +43,11 @@ Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 | DHCPv4 (Kea en kit01) | ✅ | Solo en `lan0.10` y `br-com`; pools `.100-.199` (8 h) y `.100-.250` (1 h), DNS, dominio y NTP; reservas desde `dhcp_reservas` (vacía hasta tener las MAC de administración). Probado en la Comunidad con `prueba01` y en la Interna en el laboratorio virtual. Falta un cliente real de la Interna (visita) | network#22, platform#26 |
 | DNS (BIND9 en kit01) | ✅ | Zona `salud.movil` e inversas `20.10.in-addr.arpa` y `6.1.7.d.e.7.c.f.a.5.d.f.ip6.arpa`, solo en `10.20.20.10` y `::10`, recursión para el kit, reenviadores `1.1.1.1` y `9.9.9.9` con DNSSEC, log de consultas; responde sin WAN. `ad.salud.movil` delegada a Samba AD en clinica01 (sin reenviadores ni validación DNSSEC para `salud.movil`). Falta la detección de portal (network#9) | platform#23, network#20, docs#35 |
 | NTP (Chrony en kit01) | ✅ | Servidor en `.10` y `::10` con el pool y `local stratum 10 orphan`; clientes clinica01, comunidad01 y sw01. Sin NTP externo 9 minutos, todo siguió sincronizado | platform#24, network#21, docs#36 |
-| Samba AD DC en clinica01 | ✅ | Samba 4.19.5 (retenido), realm `AD.SALUD.MOVIL`, DC `dc01.ad.salud.movil` con DNS interno, solo en `lo`, `.11` y `::11`; ufw abre el 53 solo a kit01 (F-25). Grupos `clinicos` y `admins`, usuarios de prueba `ana.rojas`, `carlos.perez` y `laura.gomez`; política sin complejidad, mínimo 8, bloqueo tras 5 intentos por 15 min. `kinit` por IPv4 e IPv6 y fallos en `/var/log/samba/auth.log`. Usa unos 50 MB de RAM (R-09). Faltan los recursos SMB (platform#9) y el backup del dominio (platform#11) | PR platform#28, docs#37 (v0.17) |
+| Samba AD DC en clinica01 | ✅ | Samba 4.19.5 (retenido), realm `AD.SALUD.MOVIL`, DC `dc01.ad.salud.movil` con DNS interno, solo en `lo`, `.11` y `::11`; ufw abre el 53 solo a kit01 (F-25). Grupos `clinicos` y `admins`, usuarios de prueba `ana.rojas`, `carlos.perez` y `laura.gomez`; política sin complejidad, mínimo 8, bloqueo tras 5 intentos por 15 min. `kinit` por IPv4 e IPv6 y fallos en `/var/log/samba/auth.log`. Usa unos 50 MB de RAM (R-09). gid y uid fijos por RFC2307 (`clinicos` 10001, `admins` 10002, usuarios desde 10101). Falta el backup del dominio (platform#11) | PR platform#28, docs#37 (v0.17) |
+| Recursos SMB en clinica01 | ✅ | `\\archivos.salud.movil\archivos` (solo `clinicos`, cifrado obligatorio) y `contenido` (`zim/`, `salud/`, `comunidad/`; escritura de `clinicos` y `admins`) en `/srv/samba`, con permisos POSIX y ACL por defecto (sin `acl_xattr`); SMB3 como mínimo; SPN `cifs/archivos.salud.movil` para Kerberos; ufw y nftables abren el 445 solo a la Interna. Probado en clinica01 y con sw01 por IPv4 e IPv6; la Comunidad queda bloqueada (`prueba01`). Falta montarlo desde un equipo real de la Interna (visita) | PR platform#29, PR network#24, PR docs#39 |
 | DHIS2 en clinica01 | 🟡 | Docker 29.1.3 y Compose 2.40.3 (retenidos), `dhis2/core:2.42.6.0` y `postgis/postgis:16-3.5` con datos en `/srv/dhis2`, roles `docker` y `dhis2`. Detenido después de la prueba, con 2220 pacientes de prueba | apps#9; instalación en apps#2 |
 
-Los demás servicios dentro de las VMs (recursos SMB, Kiwix, Jellyfin) y los del host (portal, Prometheus, Grafana, rsyslog, NUT, backups) están pendientes. kit01 sigue resolviendo con los DNS del sitio; pasarlo a BIND9 se propone aparte porque cambia cómo resuelve NetBird.
+Los demás servicios dentro de las VMs (Kiwix, Jellyfin) y los del host (portal, Prometheus, Grafana, rsyslog, NUT, backups) están pendientes. kit01 sigue resolviendo con los DNS del sitio; pasarlo a BIND9 se propone aparte porque cambia cómo resuelve NetBird.
 
 ## Visitas presenciales previstas
 
@@ -54,5 +55,5 @@ Todo lo demás se hace en remoto por NetBird (D-23).
 
 | Visita | Para qué | Referencia |
 |---|---|---|
-| Wi-Fi y celulares | Clientes en cada SSID, portal cautivo, aislamiento, P1, P4 y P5 | network#7 |
+| Wi-Fi y celulares | Clientes en cada SSID, portal cautivo, aislamiento, P1, P4 y P5; montar `archivos` desde un equipo de la Interna (P7) | network#7, platform#9 |
 | Resiliencia | Conectar el disco USB y el reinicio de P12 con alguien en el sitio, que además activa el kernel 6.8.0-146 y los servicios actualizados de kit01 | platform#11, platform#13 |
