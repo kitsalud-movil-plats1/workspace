@@ -222,3 +222,15 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Con un ticket de `kinit`, `smbclient --use-kerberos=required` no responde y un playbook que lo ejecuta llega al timeout.
 - **Causa.** `smbclient` pide la contraseña aunque luego use el ticket.
 - **Solución.** Agregar `-N` y cerrar la entrada (`</dev/null`).
+
+## La búsqueda de Kiwix responde `Invalid request` o `Fulltext search unavailable`
+
+- **Síntoma.** `/search?books.name=wikipedia_es_medicine&pattern=...` responde `Invalid request`, y con `books.id=` responde `Fulltext search unavailable`, aunque el ZIM trae índice.
+- **Causa.** `kiwix-serve` 3.8 identifica cada libro por el nombre del archivo sin `.zim`.
+- **Solución.** `/search?content=wikipedia_es_medicine_maxi_2026-07&pattern=diabetes`. La interfaz web arma la URL sola.
+
+## kit01 no resuelve los nombres de `salud.movil`
+
+- **Síntoma.** En kit01, `curl http://biblioteca.salud.movil/` falla con código `000`, aunque desde la Interna funciona.
+- **Causa.** kit01 sigue resolviendo con los DNS del sitio, que no conocen la zona del kit.
+- **Solución.** Resolver con BIND9 (`dig -b 10.20.10.1 @10.20.20.10 biblioteca.salud.movil`) y pasar la IP a `curl --resolve`, con `--interface 10.20.10.1` o `fd5a:fc7e:d716:10::1` para salir con una dirección de la Interna.
