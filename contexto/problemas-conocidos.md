@@ -204,3 +204,21 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** `kinit` o `smbclient` fallan con la clave correcta y `samba-tool user show <usuario>` muestra `lockoutTime` distinto de `0`.
 - **Causa.** La política bloquea la cuenta 15 minutos después de 5 intentos fallidos, y las pruebas del log de autenticación suman intentos (también un comando con la variable de la clave vacía).
 - **Solución.** `sudo samba-tool user unlock <usuario>` o esperar 15 minutos. Para las pruebas de fallos, usar un usuario distinto del que se usa para las pruebas exitosas.
+
+## Los archivos de un recurso SMB del DC quedan con el grupo 100
+
+- **Síntoma.** En un recurso de Samba AD DC con setgid y ACL por defecto, lo que se sube por SMB queda con el grupo `100` (Domain Users), con `group:100:rwx` y `user:<uid>:rwx` en la ACL, y sin el setgid de la carpeta.
+- **Causa.** En un DC todos los recursos cargan `acl_xattr`, que hereda una ACL de Windows con CREATOR OWNER y CREATOR GROUP y la traduce a POSIX con el grupo principal del usuario. `inherit acls = yes` no lo cambia.
+- **Solución.** En el recurso, `vfs objects = dfs_samba4`, `nt acl support = no`, `create mask = 0660` y `directory mask = 2770`. Así el kernel aplica el setgid y la ACL por defecto (rol `samba_ad`).
+
+## `smbclient --client-protection=off` no sirve para probar el cifrado obligatorio
+
+- **Síntoma.** Contra un recurso con `server smb encrypt = required`, `smbclient --client-protection=off` (o `client smb encrypt = off`) entra y lista sin error.
+- **Causa.** El cliente de Samba acepta cifrar cuando el servidor lo exige.
+- **Solución.** Dejar una sesión abierta y revisar `sudo smbstatus -S`, que muestra `AES-128-GCM` en la columna de cifrado del recurso.
+
+## `smbclient --use-kerberos=required` se queda esperando
+
+- **Síntoma.** Con un ticket de `kinit`, `smbclient --use-kerberos=required` no responde y un playbook que lo ejecuta llega al timeout.
+- **Causa.** `smbclient` pide la contraseña aunque luego use el ticket.
+- **Solución.** Agregar `-N` y cerrar la entrada (`</dev/null`).
