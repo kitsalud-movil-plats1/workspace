@@ -258,3 +258,15 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Una segunda pasada para comprobar la idempotencia termina con `changed` en archivos que se editaron mientras corría, y la pasada siguiente da `changed=0` sin haber aplicado nada nuevo.
 - **Causa.** `copy` y `template` leen el archivo del repositorio cuando llega su tarea, no al empezar el playbook.
 - **Solución.** No editar archivos de un rol mientras corre un playbook que lo usa, y no lanzar dos playbooks a la vez sobre la misma VM.
+
+## Ansible en segundo plano no encuentra los roles ni el inventario
+
+- **Síntoma.** Un `ansible-playbook` lanzado en segundo plano desde la sesión del agente responde `could not match supplied host pattern` o `the role ... was not found`, aunque el comando hace `cd platform/ansible`.
+- **Causa.** Ese modo no conserva el directorio de trabajo, así que Ansible no lee `platform/ansible/ansible.cfg`.
+- **Solución.** Exportar `ANSIBLE_CONFIG=<ruta absoluta>/platform/ansible/ansible.cfg` y pasar el playbook con ruta absoluta.
+
+## Caddy sigue entregando un certificado de la CA anterior
+
+- **Síntoma.** Después de cambiar la CA de Caddy (bloque `pki`), `openssl s_client` muestra todavía el emisor viejo.
+- **Causa.** Caddy guarda los certificados emitidos en `data/caddy/certificates/local` y los sirve hasta renovarlos.
+- **Solución.** Borrar esa carpeta y reiniciar Caddy. El rol `ca_interna` lo hace solo cuando cambia el intermedio.
