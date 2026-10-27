@@ -312,3 +312,27 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Un panel con `up{equipo="x"} or vector(0)` muestra dos valores para el mismo equipo, uno de ellos en 0.
 - **Causa.** `or` solo descarta los elementos del lado derecho cuyas etiquetas coinciden con las del izquierdo, y `vector(0)` no tiene etiquetas.
 - **Solución.** Quitar las etiquetas antes con una agregación, `min(up{equipo="x"}) or vector(0)`. Así, cuando el equipo está apagado, el panel muestra 0 ("No responde") y no queda vacío.
+
+## `rsyslogd -N1` no puede abrir el archivo que valida Ansible
+
+- **Síntoma.** El `validate` de una plantilla de rsyslog falla con `could not open config file '/home/<usuario>/.ansible/tmp/.../.source.conf': Permission denied`.
+- **Causa.** El perfil de AppArmor de rsyslogd solo le deja leer sus rutas, como `/etc/rsyslog.d/`.
+- **Solución.** Validar una copia en `/etc/rsyslog.d/` con un nombre que no termine en `.conf`, para que rsyslog no la cargue (así lo hacen los roles `rsyslog_central` y `comun`). Si el archivo usa imfile, la copia lleva antes `global(workDirectory="/var/spool/rsyslog")`, porque suelto no ve el de `rsyslog.conf` y la validación falla por el aviso.
+
+## imfile lee el archivo al arrancar pero no ve las líneas nuevas
+
+- **Síntoma.** Con imfile, lo que ya estaba en el archivo llega al reiniciar rsyslog, pero lo que se escribe después no. El kernel registra `apparmor="DENIED" ... profile="rsyslogd" name="/var/log/" comm="in:imfile"` (también para `/var/` y `/`).
+- **Causa.** imfile abre los directorios padres del archivo para vigilarlo, y el perfil de rsyslogd permite `/var/log/**` pero no los directorios `/`, `/var/` ni `/var/log/` mismos.
+- **Solución.** Agregar `/ r,`, `/var/ r,` y `/var/log/ r,` a `/etc/apparmor.d/local/usr.sbin.rsyslogd`, recargar el perfil con `apparmor_parser -r /etc/apparmor.d/usr.sbin.rsyslogd` y reiniciar rsyslog. El rol `comun` lo hace en los equipos con `comun_rsyslog_archivos`.
+
+## `systemctl stop rsyslog` no detiene el receptor
+
+- **Síntoma.** Para probar la cola de las VMs se detiene rsyslog en kit01, pero los mensajes siguen llegando al momento y `systemctl is-active rsyslog` responde `activating`.
+- **Causa.** `syslog.socket` activa rsyslog cuando journald le escribe, así que vuelve a arrancar en el mismo segundo.
+- **Solución.** Detener los dos (`systemctl stop syslog.socket rsyslog`) y encenderlos igual (`systemctl start syslog.socket rsyslog`).
+
+## `comun.yml` cambia `prueba01`
+
+- **Síntoma.** Con `prueba01` encendida, `ansible-playbook playbooks/comun.yml` marca cambios en `prueba01` (el drop-in `10-comun.conf` de sshd).
+- **Causa.** El playbook apunta a `hosts: all`, y `prueba01` está en el inventario (grupo `pruebas`) aunque no lleva el rol `comun`.
+- **Solución.** Con `prueba01` encendida, correr `comun.yml` con `-l '!pruebas'` (o `-l vms`). Si ya se aplicó, borrar `/etc/ssh/sshd_config.d/10-comun.conf` en `prueba01`, validar con `sshd -t` y recargar `ssh`.
