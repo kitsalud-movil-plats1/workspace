@@ -294,3 +294,21 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Una sonda o un `curl` en kit01 a `https://pacientes.salud.movil` falla al resolver el nombre.
 - **Causa.** kit01 resuelve con los DNS del sitio (`192.168.215.20` y `.30`), que no conocen `salud.movil`. BIND9 solo atiende a los clientes del kit.
 - **Solución.** Ir a la IP con el nombre en la cabecera y en el SNI, como hacen los módulos `web_*` del blackbox. Con curl, `curl --resolve pacientes.salud.movil:443:10.20.20.11 https://pacientes.salud.movil/api/ping`. Las sondas tampoco siguen redirecciones, porque la redirección lleva al nombre.
+
+## Grafana rechaza el certificado LDAPS que Samba genera solo
+
+- **Síntoma.** El login LDAPS de un cliente en Go (Grafana) falla con `x509: certificate relies on legacy Common Name field` aunque la cadena sea de confianza.
+- **Causa.** Samba crea al aprovisionar un certificado propio (`/var/lib/samba/private/tls/`) con el nombre solo en el CN y sin subjectAltName. Go no acepta el CN desde la versión 1.15.
+- **Solución.** Samba usa un certificado de `dc01.ad.salud.movil` con subjectAltName, firmado por el intermedio de clinica01 (`ca_hojas_vm` del rol `ca_interna`) y configurado con `tls keyfile`, `tls certfile` y `tls cafile` en `smb.conf`. Para que el intermedio lo pueda firmar, `dc01.ad` tiene que estar en `ca_nombres` de clinica01.
+
+## nginx no aplica un sitio nuevo después de un playbook cortado
+
+- **Síntoma.** El sitio está enlazado en `/etc/nginx/sites-enabled/`, la segunda ejecución da `changed=0` y aun así nginx no escucha en el puerto del sitio.
+- **Causa.** La ejecución anterior se cortó (un `timeout` en la máquina de control) después de copiar el sitio y antes de correr el handler "Recargar nginx". Los handlers pendientes se pierden con el corte, y en la siguiente ejecución el archivo ya no cambia.
+- **Solución.** `sudo nginx -t && sudo systemctl reload nginx` en kit01. Los playbooks largos (el de monitoreo tarda unos 10 minutos en el kit real) se ejecutan sin un `timeout` corto o en segundo plano con la salida a un archivo.
+
+## Un panel de Grafana muestra un equipo dos veces
+
+- **Síntoma.** Un panel con `up{equipo="x"} or vector(0)` muestra dos valores para el mismo equipo, uno de ellos en 0.
+- **Causa.** `or` solo descarta los elementos del lado derecho cuyas etiquetas coinciden con las del izquierdo, y `vector(0)` no tiene etiquetas.
+- **Solución.** Quitar las etiquetas antes con una agregación, `min(up{equipo="x"}) or vector(0)`. Así, cuando el equipo está apagado, el panel muestra 0 ("No responde") y no queda vacío.
