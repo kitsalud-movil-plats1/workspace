@@ -41,6 +41,7 @@ Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, 
 | VMs | `clinica01` (4 vCPU, 7 GB, MAC `52:54:00:20:00:11`, `vnet` en `br-srv`) y `comunidad01` (2 vCPU, 2,5 GB, MAC `52:54:00:20:00:12`), las dos con autostart. `prueba01` (1 vCPU, 512 MB, MAC `52:54:00:40:00:50`) en `br-com`, apagada y sin autostart. Con las dos encendidas, kit01 usa unos 2,3 GiB y tiene 13 GiB disponibles en reposo |
 | Monitoreo | Prometheus 2.45.3 (`127.0.0.1:9090`), blackbox 0.24.0 (`127.0.0.1:9115`, con `cap_net_raw=ep` en el binario) y node_exporter 1.7.0 (`127.0.0.1:9100`), retenidos. Configuración en `/etc/prometheus/`, datos en `/var/lib/prometheus` (30 días). Juntos usan unos 120 MiB de RAM |
 | Grafana y nginx | Grafana OSS 13.2.4 (`grafana.sources`, `apt.grafana.com`) en `127.0.0.1:3000`, base SQLite en `/var/lib/grafana`. nginx 1.24.0 en `0.0.0.0:443` y `[::]:443`, sin el sitio de fábrica, con `server_tokens off`. Los dos retenidos. `/etc/hosts` tiene `dc01.ad.salud.movil` con las dos IP de clinica01, porque kit01 resuelve con los DNS del sitio. Grafana usa unos 330 MiB de RAM. El primer arranque tarda unos 30 s y, con clinica01 apagada, el login local tarda unos 4 s porque Grafana prueba antes LDAP |
+| Logs centralizados | rsyslog 8.2312.0 (retenido) recibe en `10.20.20.10:514` y `[fd5a:fc7e:d716:20::10]:514` (TCP y UDP) y guarda en `/var/log/kitsalud/<equipo>/` (`syslog:adm`, `0640`), con `kit01/firewall.log`, `dhcp.log`, `dns.log` y `auth.log` como copia de los eventos locales. Configuración en `/etc/rsyslog.d/30-kitsalud-central.conf` y rotación en `/etc/logrotate.d/kitsalud-registros`. `syslog.socket` vuelve a levantar rsyslog si solo se detiene `rsyslog.service`. Copia del `nftables.conf` previo a F-15 y F-16 en `/etc/nftables.conf.anterior` |
 | NetBird | 0.80.0, IP `100.90.225.113`; paquete retenido con `apt-mark hold`. Su firewall usa las tablas iptables-nft `ip filter`, `ip nat`, `ip mangle` e `ip raw` |
 | Virtualización (paquetes) | QEMU 8.2.2 (`qemu-system-x86`, que provee `qemu-kvm`), libvirt 10.0.0, virt-install 4.1.0. Red `default` (`virbr0`) detenida y sin arranque automático; libvirt deja los saltos a cadenas `LIBVIRT_*` vacías |
 | `virt-host-validate qemu` | Todo `PASS` (IOMMU incluido, el kernel lo activa por defecto) salvo `WARN` de "secure guest support" |
@@ -71,7 +72,7 @@ Los bridges tienen STP apagado y `forward-delay` 0. El reenvío IPv4 e IPv6 est�
 | Servicio | `nftables.service` habilitado, con `ExecStop` propio (`/etc/nftables/quitar.nft`) en `/etc/systemd/system/nftables.service.d/kit01.conf` |
 | NetBird | WireGuard en `udp/51820` (kernel, interfaz `wt0`); en la prueba todos los peers iban por relay (`rels://...relay.netbird.io:443`) |
 | Respaldo | `/root/nft-anterior/` (ruleset e iptables antes de aplicar, y el `nftables.conf` original de Ubuntu) |
-| Log | `journalctl -k \| grep fw-drop`; aparece el MNDP de sw01 (`udp/5678` a `255.255.255.255`) como ruido |
+| Log | `/var/log/kitsalud/kit01/firewall.log` o `journalctl -k \| grep fw-drop`; aparece el MNDP de sw01 (`udp/5678` a `255.255.255.255`) como ruido |
 
 Las VMs salen a Internet por 80 y 443, solo IPv4 (F-17). Resuelven por BIND9 en kit01 y no pueden consultar DNS de afuera.
 
