@@ -282,3 +282,15 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Editar el README de `apps/comunidad01/formularios/` hace que la siguiente pasada reconstruya la imagen.
 - **Causa.** El rol copiaba toda la carpeta, y cualquier cambio marcaba el código como cambiado.
 - **Solución.** El rol copia solo `Dockerfile`, `requirements.txt`, `app.py`, `compose.yml`, `templates/` y `static/`. Un archivo nuevo que entre en la imagen se agrega a esa lista.
+
+## Las sondas ICMP de blackbox fallan con `permission denied`
+
+- **Síntoma.** Todas las sondas de ping dan `probe_success 0` y con `&debug=true` aparece `Unable to do unprivileged listen on socket ... socket: permission denied`.
+- **Causa.** El paquete `prometheus-blackbox-exporter` de Ubuntu solo le da `cap_net_raw` al binario si se responde que sí a `prometheus-blackbox-exporter/want_cap_net_raw` en debconf, y por omisión es no. Además, su `postinst` deja en el binario un atributo de capacidades vacío (`getcap` muestra `=`). Con ese atributo el kernel borra las capacidades *ambient* al ejecutar el binario, así que un drop-in de systemd con `AmbientCapabilities=CAP_NET_RAW` tampoco sirve.
+- **Solución.** Responder que sí en debconf antes de instalar y, si ya estaba instalado, `dpkg-reconfigure -f noninteractive prometheus-blackbox-exporter`. Lo hace el rol `blackbox_exporter`. `getcap /usr/bin/prometheus-blackbox-exporter` debe mostrar `cap_net_raw=ep`.
+
+## Una sonda web desde kit01 no resuelve los nombres del kit
+
+- **Síntoma.** Una sonda o un `curl` en kit01 a `https://pacientes.salud.movil` falla al resolver el nombre.
+- **Causa.** kit01 resuelve con los DNS del sitio (`192.168.215.20` y `.30`), que no conocen `salud.movil`. BIND9 solo atiende a los clientes del kit.
+- **Solución.** Ir a la IP con el nombre en la cabecera y en el SNI, como hacen los módulos `web_*` del blackbox. Con curl, `curl --resolve pacientes.salud.movil:443:10.20.20.11 https://pacientes.salud.movil/api/ping`. Las sondas tampoco siguen redirecciones, porque la redirección lleva al nombre.
