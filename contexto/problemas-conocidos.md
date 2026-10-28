@@ -252,6 +252,13 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** `/tool fetch url="https://10.20.20.11/..."` termina en `error` aunque el contador de nftables sube, y por nombre falla con `dns server failure`.
 - **Causa.** Con una IP en la URL RouterOS no manda SNI y Caddy no sabe qué certificado dar; sw01 no resuelve los nombres de `salud.movil`.
 - **Solución.** `default_sni pacientes.salud.movil` en el Caddyfile de clinica01, y en el fetch `http-header-field="Host: pacientes.salud.movil" check-certificate=no`.
+- **Nota.** Hacia clinica01 el fetch por HTTPS falla ahora con `ssl: decode error` (ver la entrada siguiente). Hacia comunidad01 (`https://10.20.20.12/`) sigue funcionando.
+
+## `/tool fetch` de sw01 no completa el TLS con el Caddy de clinica01
+
+- **Síntoma.** `/tool fetch url="https://10.20.20.11/..."` con `check-certificate=no` termina en `failure: SSL: ssl: decode error (6)`, tanto para `pacientes` como para `consultas` y por IPv4 e IPv6 (2026-10-27). El mismo fetch a `https://10.20.20.12/` (comunidad01) termina en `finished`.
+- **Causa.** No está confirmada. Las hojas de las dos VMs tienen la misma forma (sujeto vacío, SAN crítico, ECDSA). La diferencia visible está en el intermedio. El de clinica01 se volvió a firmar el 27 de octubre con cuatro nombres permitidos (`pacientes`, `consultas`, `archivos` y `dc01.ad`) y el de comunidad01 tiene uno. Desde kit01, `curl` y `openssl s_client` validan bien las dos cadenas con la raíz.
+- **Solución.** Para probar desde la Interna que el firewall deja pasar el 443, usar `/tool fetch url="http://10.20.20.11:443/" keep-result=no` (y con `[fd5a:fc7e:d716:20::11]`). `Fetch failed with status 400` significa que Caddy contestó. El contenido y el certificado se prueban con `curl --cacert` desde kit01.
 
 ## Dos ejecuciones de Ansible a la vez sobre la misma VM
 
@@ -336,3 +343,21 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Con `prueba01` encendida, `ansible-playbook playbooks/comun.yml` marca cambios en `prueba01` (el drop-in `10-comun.conf` de sshd).
 - **Causa.** El playbook apunta a `hosts: all`, y `prueba01` está en el inventario (grupo `pruebas`) aunque no lleva el rol `comun`.
 - **Solución.** Con `prueba01` encendida, correr `comun.yml` con `-l '!pruebas'` (o `-l vms`). Si ya se aplicó, borrar `/etc/ssh/sshd_config.d/10-comun.conf` en `prueba01`, validar con `sshd -t` y recargar `ssh`.
+
+## Un contenedor con la red del host resuelve el nombre de su VM a `127.0.1.1`
+
+- **Síntoma.** La consulta de prerregistros, con `network_mode: host` y `DB_HOST=clinica01.salud.movil`, responde que no puede leer la base. El log dice `connection to server at "127.0.1.1", port 5432 failed: Connection refused`.
+- **Causa.** Con la red del host el contenedor usa el `/etc/hosts` de la VM, que en Ubuntu pone el nombre propio en `127.0.1.1`. Docker publica el 5432 solo en las IP de clinica01.
+- **Solución.** Conectar por las IP, `DB_HOST=10.20.20.11,fd5a:fc7e:d716:20::11` (libpq prueba una y luego la otra), que además son el origen que acepta `pg_hba.conf`.
+
+## DHIS2 responde `401` justo después de reiniciar PostgreSQL
+
+- **Síntoma.** Al cambiar `pg_hba.conf`, el playbook de clinica01 falla en "Cambiar la clave de fábrica de admin" con `HTTP Error 401`, aunque la clave del vault es la correcta.
+- **Causa.** El rol reinicia `db` y espera `/api/system/ping`, que no toca la base. Mientras DHIS2 recupera sus conexiones responde `401` a todo, así que la comprobación de la clave de `admin` falla y el rol cree que todavía tiene la de fábrica.
+- **Solución.** El rol `dhis2` espera, después de reiniciar `db`, a que `/api/me` responda `200` con la clave del vault. Si vuelve a pasar, basta con ejecutar otra vez el playbook.
+
+## gunicorn 26 no puede crear su socket de control
+
+- **Síntoma.** En el log del contenedor aparece `Control server error: [Errno 30] Read-only file system: '/app/.gunicorn'`. La app funciona igual.
+- **Causa.** gunicorn 26 abre por defecto un socket de control en `/app/.gunicorn/` y los contenedores del kit tienen el sistema de archivos de solo lectura.
+- **Solución.** `--no-control-socket` en el `CMD` (así está la consulta de prerregistros). Los formularios de comunidad01 todavía muestran el aviso.
