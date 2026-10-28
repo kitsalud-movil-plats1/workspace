@@ -384,7 +384,7 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 
 - **Síntoma.** "Últimas 12 semanas" no muestra lo de esta semana y "últimos 14 días" no muestra lo de hoy.
 - **Causa.** En DHIS2, `LAST_12_WEEKS`, `LAST_14_DAYS` y los demás terminan en el periodo anterior al actual.
-- **Solución.** Sumar `thisWeek` o `today` a la visualización, como en las del dashboard de la brigada.
+- **Solución.** Donde el periodo es filtro, sumar `thisWeek` (en `relativePeriods`, "hoy" es `thisDay`, no `today`). En un gráfico con el periodo en el eje no sirve: DHIS2 pone el periodo en curso primero aunque `rawPeriods` diga otro orden, y `weeksThisYear` trae también las semanas futuras en cero. Esos gráficos muestran solo periodos completos y lo de hoy y esta semana va en cifras aparte.
 
 ## Un elemento de lista del dashboard de DHIS2 no carga
 
