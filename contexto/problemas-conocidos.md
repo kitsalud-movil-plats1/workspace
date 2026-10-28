@@ -391,3 +391,15 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** El elemento muestra `There was a problem loading this dashboard item`. Con la autoridad corregida, el bloque queda en blanco en el navegador del equipo, y al abrirla en la app Line Listing sale `There was a problem getting the data from the server`. El navegador no llega a pedir `analytics/events` y el servidor no registra errores. En Chromium sin interfaz, con una sesión nueva, la misma lista sí cargaba.
 - **Causa.** La primera falla era la autoridad: en DHIS2 2.42 la app es `M_dhis-web-line-listing`, no `M_line-listing` (los nombres están en `GET /api/authorities`). La segunda no se encontró.
 - **Solución.** El dashboard de la brigada quedó sin la lista (apps#12). Si se vuelve a intentar, crear la lista desde la app Line Listing y exportarla con `GET /api/eventVisualizations/<id>` para versionarla, en vez de escribirla a mano.
+
+## La primera reproducción simultánea en Jellyfin falla con `500`
+
+- **Síntoma.** Con Jellyfin recién instalado, varios pedidos de `/Videos/<id>/stream` o `/Audio/<id>/stream` a la vez (por ejemplo una prueba de carga) y uno responde `500`. El log dice `The process cannot access the file '/cache/transcodes/.jellyfin-transcode' because it is being used by another process`, aunque la reproducción sea directa.
+- **Causa.** Jellyfin crea ese marcador con el primer pedido de reproducción, y si llegan varios juntos chocan al crearlo.
+- **Solución.** Ninguna. Pasa una sola vez, porque el marcador queda en `/srv/jellyfin/cache` y se conserva al reiniciar. El reproductor vuelve a intentar.
+
+## Jellyfin pide la contraseña de una cuenta sin contraseña
+
+- **Síntoma.** En la pantalla de entrada, tocar «comunidad» abre un formulario con el campo de contraseña, en lugar de entrar directo. Quick Connect da un código que no sirve como usuario ni como contraseña.
+- **Causa.** En Jellyfin 12 una cuenta creada con contraseña vacía queda con `HasPassword: true`, y reiniciar la contraseña no lo cambia. `POST /Users/<id>/Password` responde `204` sin hacer nada; el de la 12 es `POST /Users/Password?userId=<id>`, y tampoco la deja sin contraseña. Quick Connect sirve para autorizar otro dispositivo desde una sesión abierta, no para entrar.
+- **Solución.** Se entra dejando la contraseña vacía y tocando «Iniciar sesión». El rol apaga Quick Connect, oculta «Contraseña olvidada» con `.btnForgotPassword { display: none !important; }` (sin `!important` no gana) y pone un aviso en la pantalla de entrada.
