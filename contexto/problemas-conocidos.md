@@ -386,8 +386,8 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Causa.** En DHIS2, `LAST_12_WEEKS`, `LAST_14_DAYS` y los demás terminan en el periodo anterior al actual.
 - **Solución.** Donde el periodo es filtro, sumar `thisWeek` (en `relativePeriods`, "hoy" es `thisDay`, no `today`). En un gráfico con el periodo en el eje no sirve: DHIS2 pone el periodo en curso primero aunque `rawPeriods` diga otro orden, y `weeksThisYear` trae también las semanas futuras en cero. Esos gráficos muestran solo periodos completos y lo de hoy y esta semana va en cifras aparte.
 
-## Un elemento de lista del dashboard de DHIS2 no carga
+## Una lista de Line Listing en el dashboard de DHIS2 no se ve
 
-- **Síntoma.** En la app Dashboard, la lista "Últimas consultas" muestra `There was a problem loading this dashboard item`, mientras los gráficos cargan bien. En el log de Caddy aparece la petición a `/api/42/eventVisualizations/...` con `200`, pero nunca la de `/dhis-web-line-listing/plugin.html`, y el servidor no registra errores.
-- **Causa.** La cuenta no tiene la app Line Listing (`GET /api/apps` no la incluye), así que el dashboard no encuentra el plugin. En DHIS2 2.42 la autoridad de la app es `M_dhis-web-line-listing`, no `M_line-listing`.
-- **Solución.** `M_dhis-web-line-listing` en el rol "Personal clínico" de `kit.json`. Los nombres de las autoridades se consultan en `GET /api/authorities`.
+- **Síntoma.** El elemento muestra `There was a problem loading this dashboard item`. Con la autoridad corregida, el bloque queda en blanco en el navegador del equipo, y al abrirla en la app Line Listing sale `There was a problem getting the data from the server`. El navegador no llega a pedir `analytics/events` y el servidor no registra errores. En Chromium sin interfaz, con una sesión nueva, la misma lista sí cargaba.
+- **Causa.** La primera falla era la autoridad: en DHIS2 2.42 la app es `M_dhis-web-line-listing`, no `M_line-listing` (los nombres están en `GET /api/authorities`). La segunda no se encontró.
+- **Solución.** El dashboard de la brigada quedó sin la lista (apps#12). Si se vuelve a intentar, crear la lista desde la app Line Listing y exportarla con `GET /api/eventVisualizations/<id>` para versionarla, en vez de escribirla a mano.
