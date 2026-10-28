@@ -361,3 +361,33 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** En el log del contenedor aparece `Control server error: [Errno 30] Read-only file system: '/app/.gunicorn'`. La app funciona igual.
 - **Causa.** gunicorn 26 abre por defecto un socket de control en `/app/.gunicorn/` y los contenedores del kit tienen el sistema de archivos de solo lectura.
 - **Solución.** `--no-control-socket` en el `CMD` (así está la consulta de prerregistros). Los formularios de comunidad01 todavía muestran el aviso.
+
+## Indicadores de programa de DHIS2 vacíos con `bad SQL grammar`
+
+- **Síntoma.** Los indicadores de tipo `EVENT` importados por la API devuelven 0 o nada, y el log de `dhis2-core-1` muestra `bad SQL grammar [select count(...) from analytics_event_... where and ax."uidlevel1" in (...)]`. Los de tipo `ENROLLMENT` sí funcionan.
+- **Causa.** Al crear un indicador desde la interfaz, DHIS2 le agrega los límites de periodo (`analyticsPeriodBoundaries`). Por la API no los agrega, y la consulta queda sin la condición de fecha.
+- **Solución.** Cada indicador de `brigada.json` lleva sus dos límites (`AFTER_START_OF_REPORTING_PERIOD` y `BEFORE_END_OF_REPORTING_PERIOD` sobre `EVENT_DATE` o `ENROLLMENT_DATE`) con UID fijos. Después de corregirlo, la caché de analítica puede seguir devolviendo la respuesta vacía un rato; para comprobar se agrega un parámetro distinto a la URL.
+
+## Importar `kit.json` saca al personal del grupo de DHIS2
+
+- **Síntoma.** Después de un cambio en `kit.json`, `ana.rojas` y `carlos.perez` reciben `not allowed to read data for Program` y `GET /api/users?...&fields=userGroups` los muestra sin grupos.
+- **Causa.** `kit.json` define el grupo "Personal clínico" sin miembros, y la importación `CREATE_AND_UPDATE` reemplaza la lista de usuarios del grupo por la del archivo. Antes las cuentas entraban al grupo solo al crearlas.
+- **Solución.** El rol `dhis2` vuelve a meter a cada cuenta de `dhis2_usuarios` en el grupo en cada ejecución (`POST /api/userGroups/GrpPersCli1/users/<id>` si falta).
+
+## El trabajo continuo de tablas analíticas de DHIS2 no hace nada
+
+- **Síntoma.** `TrabAnalit1` termina en milisegundos, los datos nuevos no llegan al dashboard y el log dice `Updating analytics table is currently not feasible, job parameters not aligned with existing outlier data`.
+- **Causa.** Las tablas existentes se generaron sin valores atípicos (`POST /api/resourceTables/analytics`) y el trabajo tenía `skipOutliers: false`.
+- **Solución.** `skipOutliers: true` en el trabajo (`dhis2_analitica_parametros`). El kit no tiene datos agregados, así que no se usan.
+
+## Los periodos relativos de DHIS2 no incluyen el periodo en curso
+
+- **Síntoma.** "Últimas 12 semanas" no muestra lo de esta semana y "últimos 14 días" no muestra lo de hoy.
+- **Causa.** En DHIS2, `LAST_12_WEEKS`, `LAST_14_DAYS` y los demás terminan en el periodo anterior al actual.
+- **Solución.** Donde el periodo es filtro, sumar `thisWeek` (en `relativePeriods`, "hoy" es `thisDay`, no `today`). En un gráfico con el periodo en el eje no sirve: DHIS2 pone el periodo en curso primero aunque `rawPeriods` diga otro orden, y `weeksThisYear` trae también las semanas futuras en cero. Esos gráficos muestran solo periodos completos y lo de hoy y esta semana va en cifras aparte.
+
+## Una lista de Line Listing en el dashboard de DHIS2 no se ve
+
+- **Síntoma.** El elemento muestra `There was a problem loading this dashboard item`. Con la autoridad corregida, el bloque queda en blanco en el navegador del equipo, y al abrirla en la app Line Listing sale `There was a problem getting the data from the server`. El navegador no llega a pedir `analytics/events` y el servidor no registra errores. En Chromium sin interfaz, con una sesión nueva, la misma lista sí cargaba.
+- **Causa.** La primera falla era la autoridad: en DHIS2 2.42 la app es `M_dhis-web-line-listing`, no `M_line-listing` (los nombres están en `GET /api/authorities`). La segunda no se encontró.
+- **Solución.** El dashboard de la brigada quedó sin la lista (apps#12). Si se vuelve a intentar, crear la lista desde la app Line Listing y exportarla con `GET /api/eventVisualizations/<id>` para versionarla, en vez de escribirla a mano.
