@@ -397,3 +397,9 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Con Jellyfin recién instalado, varios pedidos de `/Videos/<id>/stream` o `/Audio/<id>/stream` a la vez (por ejemplo una prueba de carga) y uno responde `500`. El log dice `The process cannot access the file '/cache/transcodes/.jellyfin-transcode' because it is being used by another process`, aunque la reproducción sea directa.
 - **Causa.** Jellyfin crea ese marcador con el primer pedido de reproducción, y si llegan varios juntos chocan al crearlo.
 - **Solución.** Ninguna. Pasa una sola vez, porque el marcador queda en `/srv/jellyfin/cache` y se conserva al reiniciar. El reproductor vuelve a intentar.
+
+## Jellyfin pide la contraseña de una cuenta sin contraseña
+
+- **Síntoma.** En la pantalla de entrada, tocar «comunidad» abre un formulario con el campo de contraseña, en lugar de entrar directo. Quick Connect da un código que no sirve como usuario ni como contraseña.
+- **Causa.** En Jellyfin 12 una cuenta creada con contraseña vacía queda con `HasPassword: true`, y reiniciar la contraseña no lo cambia. `POST /Users/<id>/Password` responde `204` sin hacer nada; el de la 12 es `POST /Users/Password?userId=<id>`, y tampoco la deja sin contraseña. Quick Connect sirve para autorizar otro dispositivo desde una sesión abierta, no para entrar.
+- **Solución.** Se entra dejando la contraseña vacía y tocando «Iniciar sesión». El rol apaga Quick Connect, oculta «Contraseña olvidada» con `.btnForgotPassword { display: none !important; }` (sin `!important` no gana) y pone un aviso en la pantalla de entrada.
