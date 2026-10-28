@@ -385,3 +385,9 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** "Últimas 12 semanas" no muestra lo de esta semana y "últimos 14 días" no muestra lo de hoy.
 - **Causa.** En DHIS2, `LAST_12_WEEKS`, `LAST_14_DAYS` y los demás terminan en el periodo anterior al actual.
 - **Solución.** Sumar `thisWeek` o `today` a la visualización, como en las del dashboard de la brigada.
+
+## Un elemento de lista del dashboard de DHIS2 no carga
+
+- **Síntoma.** En la app Dashboard, la lista "Últimas consultas" muestra `There was a problem loading this dashboard item`, mientras los gráficos cargan bien. En el log de Caddy aparece la petición a `/api/42/eventVisualizations/...` con `200`, pero nunca la de `/dhis-web-line-listing/plugin.html`, y el servidor no registra errores.
+- **Causa.** La cuenta no tiene la app Line Listing (`GET /api/apps` no la incluye), así que el dashboard no encuentra el plugin. En DHIS2 2.42 la autoridad de la app es `M_dhis-web-line-listing`, no `M_line-listing`.
+- **Solución.** `M_dhis-web-line-listing` en el rol "Personal clínico" de `kit.json`. Los nombres de las autoridades se consultan en `GET /api/authorities`.
