@@ -403,3 +403,9 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** En la pantalla de entrada, tocar «comunidad» abre un formulario con el campo de contraseña, en lugar de entrar directo. Quick Connect da un código que no sirve como usuario ni como contraseña.
 - **Causa.** En Jellyfin 12 una cuenta creada con contraseña vacía queda con `HasPassword: true`, y reiniciar la contraseña no lo cambia. `POST /Users/<id>/Password` responde `204` sin hacer nada; el de la 12 es `POST /Users/Password?userId=<id>`, y tampoco la deja sin contraseña. Quick Connect sirve para autorizar otro dispositivo desde una sesión abierta, no para entrar.
 - **Solución.** Se entra dejando la contraseña vacía y tocando «Iniciar sesión». El rol apaga Quick Connect, oculta «Contraseña olvidada» con `.btnForgotPassword { display: none !important; }` (sin `!important` no gana) y pone un aviso en la pantalla de entrada.
+
+## La publicación termina con código 23 y un archivo no llega a comunidad01
+
+- **Síntoma.** `journalctl -u publicacion` en clinica01 muestra `ERROR: daemon refused to receive file "salud/<archivo>"` y `rsync error: some files/attrs were not transferred (code 23)`.
+- **Causa.** El archivo tiene el mismo nombre que un medio del rol `jellyfin` en esa biblioteca (los de `/srv/jellyfin/medios-del-rol.txt`), que el demonio de rsync de comunidad01 excluye para que la publicación nunca los sobrescriba ni los borre.
+- **Solución.** Renombrar el archivo en el recurso `contenido`. Si el medio del rol ya no hace falta, sacarlo de `contenido_medios` y ejecutar `playbooks/comunidad01.yml` y `playbooks/publicacion.yml`.
