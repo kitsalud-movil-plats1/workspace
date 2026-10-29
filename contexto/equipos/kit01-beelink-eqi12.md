@@ -32,7 +32,7 @@ Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, 
 | Usuario | `kitsalud`, compartido (D-18), con sudo y en los grupos `libvirt` y `kvm` |
 | SSH | Con contraseña y `PermitRootLogin no` (drop-in `/etc/ssh/sshd_config.d/10-comun.conf` del rol `comun` de Ansible, que gana sobre `50-cloud-init.conf`); escucha en IPv4 e IPv6. Copia del drop-in anterior en `/root/ssh-anterior/` |
 | Zona horaria | `America/Bogota` (rol `comun`; antes `Etc/UTC`) |
-| Ansible | Se administra desde `platform/ansible` con `ansible-playbook playbooks/comun.yml` (inventario `kit`, conexión por NetBird con el usuario compartido y el vault) |
+| Ansible | Se administra desde `platform/ansible` con `playbooks/comun.yml` (usuario, sshd y zona horaria) y `playbooks/kit01.yml` (hostname, virtualización, red `default` de libvirt y NetBird retenido), con el inventario `kit`, conexión por NetBird con el usuario compartido y el vault. La red y el firewall siguen a mano (network#17) |
 | DNS | BIND9 9.18.39 (`named`, retenido) solo en `10.20.20.10:53` y `[fd5a:fc7e:d716:20::10]:53`. El 53 también lo usan NetBird (`100.90.225.113`) y systemd-resolved (`127.0.0.53`, `127.0.0.54`). kit01 mismo resuelve con los DNS del sitio (`192.168.215.20` y `.30`). Logs en `/var/log/named/` |
 | NTP | Chrony 4.5 (retenido) en lugar de `systemd-timesyncd`; servidor solo en `10.20.20.10:123` y `[fd5a:fc7e:d716:20::10]:123`, fuentes de `pool.ntp.org`, `local stratum 10 orphan` |
 | DHCPv4 | Kea 2.4.1 (retenido) solo en `lan0.10` y `br-com` (sockets *raw* y `10.20.10.1:67`, `10.20.40.1:67`); préstamos en `/var/lib/kea/kea-leases4.csv`; log en el journal |
