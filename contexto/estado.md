@@ -1,6 +1,6 @@
 # Estado de implementación
 
-**Última actualización.** 2026-10-29, con la publicación de contenido de clinica01 a comunidad01 (platform#10)
+**Última actualización.** 2026-10-29, con el rol de la base de kit01 (platform#20)
 
 Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 
@@ -29,7 +29,7 @@ Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 |---|---|---|---|
 | Laboratorio virtual | ✅ | `kitlab-kit01` y `kitlab-cliente`; VLAN 10 verificada en el trunk | `lab-virtual/`, workspace#1 |
 | Salida a Internet del laboratorio virtual | ⬜ | Depende de la configuración de Docker de cada máquina | `problemas-conocidos.md` |
-| Base de Ansible | ✅ | Inventarios `kit` y `lab`, plan de direcciones en `red.yml`, secretos en `ansible-vault` (contraseña en `~/.config/kitsalud/vault-pass`, fuera del repositorio) y rol `comun` aplicado en kit01 (idempotente). Falta pasar a Ansible la red, el firewall y la base de kit01 | PR platform#19; network#17, platform#20 |
+| Base de Ansible | ✅ | Inventarios `kit` y `lab`, plan de direcciones en `red.yml`, secretos en `ansible-vault` (contraseña en `~/.config/kitsalud/vault-pass`, fuera del repositorio) y rol `comun` aplicado en kit01 (idempotente). Rol `kit01_base` (`playbooks/kit01.yml`) con el hostname, los paquetes de virtualización, la red `default` de libvirt detenida y sin autostart y NetBird retenido; `--check --diff` sin diferencias con lo que estaba a mano, y `--check` informa si la red `default` vuelve a tener autostart. Falta pasar a Ansible la red y el firewall | PR platform#19, PR platform#40; network#17 |
 | Prueba de humo de DHIS2 | ✅ | En clinica01: pico de unos 2 GB con 5 usuarios a la vez, 1,65 GB en reposo, arranque de 57 s (25 s con datos). Se mantiene el perfil de referencia (R-03) | apps#9, docs#34 |
 
 ## Servicios
