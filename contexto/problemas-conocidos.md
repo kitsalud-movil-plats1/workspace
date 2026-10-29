@@ -409,3 +409,15 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** `journalctl -u publicacion` en clinica01 muestra `ERROR: daemon refused to receive file "salud/<archivo>"` y `rsync error: some files/attrs were not transferred (code 23)`.
 - **Causa.** El archivo tiene el mismo nombre que un medio del rol `jellyfin` en esa biblioteca (los de `/srv/jellyfin/medios-del-rol.txt`), que el demonio de rsync de comunidad01 excluye para que la publicación nunca los sobrescriba ni los borre.
 - **Solución.** Renombrar el archivo en el recurso `contenido`. Si el medio del rol ya no hace falta, sacarlo de `contenido_medios` y ejecutar `playbooks/comunidad01.yml` y `playbooks/publicacion.yml`.
+
+## `wait_for_connection` tarda más que su timeout después de cortar el acceso
+
+- **Síntoma.** Con un cambio que corta el SSH (probado en el laboratorio virtual con la WAN en una IP equivocada), "Entrar de nuevo" no falla a los 60 s. Se queda esperando y entra recién cuando la restauración programada devolvió la red, unos minutos después.
+- **Causa.** Un intento de conexión hacia una dirección que ya no responde puede quedarse colgado más que el `timeout` de la tarea, que solo se revisa entre intentos.
+- **Solución.** Los roles `kit01_red` y `kit01_firewall` no confían en el tiempo. Antes de cancelar la restauración comprueban que siga pendiente (`systemctl is-active <unidad>.timer`), y si ya actuó fallan con `La restauración ... ya actuó`. El estado final es siempre el anterior o el nuevo comprobado.
+
+## El firewall activo no coincide con /etc/nftables.conf
+
+- **Síntoma.** En el laboratorio virtual, el ruleset activo tenía reglas (F-05, F-07, F-15, F-16) que no estaban en `/etc/nftables.conf`, así que un reinicio las habría perdido.
+- **Causa.** Las reglas se cargaron con `nft -f` desde otro archivo sin copiarlo a `/etc/nftables.conf`.
+- **Solución.** El rol `kit01_firewall` compara el archivo con lo activo cargándolo en un netns desechable (`unshare --net`). Si el ruleset ya es el del archivo nuevo, solo actualiza el archivo; si no, lo aplica con restauración programada.
