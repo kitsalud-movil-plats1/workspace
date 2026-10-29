@@ -1,6 +1,6 @@
 # Estado de implementación
 
-**Última actualización.** 2026-10-29, con el rol de la base de kit01 (platform#20)
+**Última actualización.** 2026-10-29, con la red y el firewall de kit01 en Ansible (network#17)
 
 Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 
@@ -29,7 +29,7 @@ Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 |---|---|---|---|
 | Laboratorio virtual | ✅ | `kitlab-kit01` y `kitlab-cliente`; VLAN 10 verificada en el trunk | `lab-virtual/`, workspace#1 |
 | Salida a Internet del laboratorio virtual | ⬜ | Depende de la configuración de Docker de cada máquina | `problemas-conocidos.md` |
-| Base de Ansible | ✅ | Inventarios `kit` y `lab`, plan de direcciones en `red.yml`, secretos en `ansible-vault` (contraseña en `~/.config/kitsalud/vault-pass`, fuera del repositorio) y rol `comun` aplicado en kit01 (idempotente). Rol `kit01_base` (`playbooks/kit01.yml`) con el hostname, los paquetes de virtualización, la red `default` de libvirt detenida y sin autostart y NetBird retenido; `--check --diff` sin diferencias con lo que estaba a mano, y `--check` informa si la red `default` vuelve a tener autostart. Falta pasar a Ansible la red y el firewall | PR platform#19, PR platform#40; network#17 |
+| Base de Ansible | ✅ | Inventarios `kit` y `lab`, plan de direcciones en `red.yml`, secretos en `ansible-vault` (contraseña en `~/.config/kitsalud/vault-pass`, fuera del repositorio) y rol `comun` aplicado en kit01 (idempotente). Rol `kit01_base` (`playbooks/kit01.yml`) con el hostname, los paquetes de virtualización, la red `default` de libvirt detenida y sin autostart y NetBird retenido; `--check --diff` sin diferencias con lo que estaba a mano, y `--check` informa si la red `default` vuelve a tener autostart. Roles `kit01_firewall` y `kit01_red` (`playbooks/red-kit01.yml`) con el netplan, el sysctl y nftables desde plantillas en `network/kit01/`: generan un candidato en `/run`, lo comparan con lo activo (nftables en un netns desechable, netplan con `generate --root-dir`) y solo recargan si cambia el resultado, con restauración programada a los 120 s que cancelan si entran de nuevo, NetBird sigue conectado y sus reglas de iptables no cambian. Probado en el laboratorio virtual, que quedó con la misma red interna y el mismo firewall que kit01, con dos bloqueos a propósito que la restauración deshizo sola. En kit01 solo cambió el comentario del sysctl; huella de NetBird igual (28 reglas) | PR platform#19, PR platform#40, PR network#29 |
 | Prueba de humo de DHIS2 | ✅ | En clinica01: pico de unos 2 GB con 5 usuarios a la vez, 1,65 GB en reposo, arranque de 57 s (25 s con datos). Se mantiene el perfil de referencia (R-03) | apps#9, docs#34 |
 
 ## Servicios
