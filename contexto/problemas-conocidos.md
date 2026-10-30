@@ -421,3 +421,9 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** En el laboratorio virtual, el ruleset activo tenía reglas (F-05, F-07, F-15, F-16) que no estaban en `/etc/nftables.conf`, así que un reinicio las habría perdido.
 - **Causa.** Las reglas se cargaron con `nft -f` desde otro archivo sin copiarlo a `/etc/nftables.conf`.
 - **Solución.** El rol `kit01_firewall` compara el archivo con lo activo cargándolo en un netns desechable (`unshare --net`). Si el ruleset ya es el del archivo nuevo, solo actualiza el archivo; si no, lo aplica con restauración programada.
+
+## Un set de nftables pierde sus elementos o su vencimiento
+
+- **Síntoma.** Después de aplicar el firewall, las MAC autorizadas del portal desaparecen. Al copiar un listado con `nft -s list`, los elementos vuelven con las 8 h completas, y `add element ... { <MAC> expires 2h }` también las deja en 8 h.
+- **Causa.** `nft -f /etc/nftables.conf` borra y recrea la tabla con sus sets vacíos. `-s` (sin estado) no lista el vencimiento de cada elemento, y nftables 1.0.9 ignora `expires` al agregar.
+- **Solución.** `kit01_firewall` lee los elementos con `nft -j list set` (trae `expires` en segundos) y, en el mismo comando que aplica, los vuelve a agregar con `timeout <segundos restantes>`. Para comparar el firewall sin que cuenten las MAC se usa `nft -t` (sin el contenido de los sets).
