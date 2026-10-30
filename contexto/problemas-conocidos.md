@@ -427,3 +427,9 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Después de aplicar el firewall, las MAC autorizadas del portal desaparecen. Al copiar un listado con `nft -s list`, los elementos vuelven con las 8 h completas, y `add element ... { <MAC> expires 2h }` también las deja en 8 h.
 - **Causa.** `nft -f /etc/nftables.conf` borra y recrea la tabla con sus sets vacíos. `-s` (sin estado) no lista el vencimiento de cada elemento, y nftables 1.0.9 ignora `expires` al agregar.
 - **Solución.** `kit01_firewall` lee los elementos con `nft -j list set` (trae `expires` en segundos) y, en el mismo comando que aplica, los vuelve a agregar con `timeout <segundos restantes>`. Para comparar el firewall sin que cuenten las MAC se usa `nft -t` (sin el contenido de los sets).
+
+## El fetch de sw01 parece bloqueado aunque el servicio responde
+
+- **Síntoma.** En `verificar-flujos.yml`, un flujo desde sw01 hacia un servicio web (p. ej. la biblioteca en el 80) sale como `sin respuesta`, aunque desde otros equipos funciona.
+- **Causa.** `/tool fetch` de RouterOS no imprime `requesting` cuando el servidor contesta enseguida con un código HTTP; termina con `failure: Fetch failed with status 308`. Una conexión sin respuesta, en cambio, se queda en `connecting` y termina con `Idle timeout - connecting` (unos 15 s).
+- **Solución.** El playbook cuenta como `abierto` cualquier salida con `requesting`, `waiting data`, `with status` o `finished`. En RouterOS 7.13 `/tool fetch` no acepta `idle-timeout`.
