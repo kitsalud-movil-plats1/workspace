@@ -433,3 +433,9 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** En `verificar-flujos.yml`, un flujo desde sw01 hacia un servicio web (p. ej. la biblioteca en el 80) sale como `sin respuesta`, aunque desde otros equipos funciona.
 - **Causa.** `/tool fetch` de RouterOS no imprime `requesting` cuando el servidor contesta enseguida con un código HTTP; termina con `failure: Fetch failed with status 308`. Una conexión sin respuesta, en cambio, se queda en `connecting` y termina con `Idle timeout - connecting` (unos 15 s).
 - **Solución.** El playbook cuenta como `abierto` cualquier salida con `requesting`, `waiting data`, `with status` o `finished`. En RouterOS 7.13 `/tool fetch` no acepta `idle-timeout`.
+
+## En sw01 no se puede filtrar en el chip de switch
+
+- **Síntoma.** `/interface ethernet switch rule add ...` responde con error, así que no se puede filtrar el IPv6 hacia `ff02::1` (los RA) en el hardware.
+- **Causa.** Los dos chips de sw01 son Marvell 88E6191X, que en RouterOS 7.13 no aceptan reglas de switch (ACL). Y según cómo funciona RouterOS, con la conmutación por hardware el chip reparte el tráfico de un puerto sin pasar por la CPU, así que `/interface bridge filter` no lo ve.
+- **Solución.** `hw=no` en los puertos que se filtran (los de acceso, lista `acceso`), que pasan por la CPU, y la regla en `/interface bridge filter`. ether1 sigue por hardware. Que el contador de la regla suba con un RA real se comprueba en la visita (`network/switch/README.md`).
