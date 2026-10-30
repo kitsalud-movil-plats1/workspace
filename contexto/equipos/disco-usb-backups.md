@@ -25,7 +25,7 @@ Leído en la laptop con `sudo smartctl -d sat -i -H -A /dev/sda`. A través de l
 | Ciclos de encendido / arranques del motor | 381 / 852 |
 | Sectores reasignados, pendientes e incorregibles | 0, 0 y 0 |
 | Errores CRC de la interfaz | 0 |
-| Temperatura | 39 °C (máxima registrada 44 °C) |
+| Temperatura | 39 °C (máxima registrada en su vida 56 °C) |
 | Ciclos de carga del cabezal | 6900 |
 
 ## Formato
