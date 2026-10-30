@@ -11,8 +11,22 @@ Ficha del disco externo donde kit01 guarda el repositorio de restic. El diseño 
 | Disco | Seagate ST500LM034-2GH17A (BarraCuda 2,5"), 500 GB (500 107 862 016 bytes), 7200 rpm, firmware `RPM2` |
 | Serie y WWN | `WGS67BX9`, `0x5000c500c116bbca` |
 | Carcasa | Innostor IS621 (USB `1f75:0621`), USB 3.0 a 5 Gb/s, driver `usb-storage` (sin UAS). Se alimenta por el mismo cable USB |
-| Sectores | Lógico y físico de 512 bytes |
+| Sectores | Lógico de 512 bytes y físico de 4096 (512e). La carcasa reporta 512 y 512 al kernel; la partición empieza en el sector 2048, alineada a 4K |
+| Interfaz del disco | SATA 3.1, negociado a 3 Gb/s con la carcasa |
 | `/dev/disk/by-id` | `usb-Innostor_Ext._HDD_20241116-0:0` (el nombre lo da la carcasa, no el disco) |
+
+## Salud (SMART, 2026-10-30)
+
+Leído en la laptop con `sudo smartctl -d sat -i -H -A /dev/sda`. A través de la carcasa el estado general sale de los atributos (`SMART Status not supported: Incomplete response`), y da `PASSED`.
+
+| Atributo | Valor |
+|---|---|
+| Horas encendido | 4601 |
+| Ciclos de encendido / arranques del motor | 381 / 852 |
+| Sectores reasignados, pendientes e incorregibles | 0, 0 y 0 |
+| Errores CRC de la interfaz | 0 |
+| Temperatura | 39 °C (máxima registrada 44 °C) |
+| Ciclos de carga del cabezal | 6900 |
 
 ## Formato
 
