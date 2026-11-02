@@ -2,7 +2,7 @@
 
 Ficha del disco externo donde kit01 guarda el repositorio de restic. El diseño de referencia está en `docs/arquitectura/00-punto-de-partida.md`, R11, D-10 y sección 10.6, y el componente en `platform/backups/`.
 
-**Estado (2026-10-30).** Formateado y listo para conectar. Todavía no está conectado a kit01. El rol `backups` ya está desplegado y el timer activo, así que la primera copia programada después de conectarlo crea el repositorio y hace la primera copia.
+**Estado (2026-11-02).** Conectado a kit01 desde el 2026-10-30 a las 12:43, en el bus USB 3.0 (`4-1`). El repositorio de restic se creó con la primera copia de ese día. Tiene los snapshots del 2026-10-30, del 2026-11-01 (programado) y del 2026-11-02 (P11), y ocupa unos 850 MiB.
 
 ## Identificación y hardware
 
@@ -44,9 +44,11 @@ Traía NTFS ("Nuevo vol") con una partición reservada de Windows de 16 MB y sol
 
 - kit01 no lo monta al conectarlo, porque no está en `fstab` y udisks2 (activo en kit01) no monta nada sin una sesión de escritorio. Lo monta `backup-kit` por UUID en `/mnt/backup` y lo desmonta al terminar, también si algo falla.
 - Conectado en caliente funciona (probado con un disco virtual en el laboratorio). No hay que reiniciar ni ejecutar nada en kit01.
+- Conectado en caliente en kit01 real, el kernel lo vio como `sda` con la carcasa en `usb-storage` y la copia siguiente lo montó sin hacer nada más (2026-10-30).
+- restic casi no comprime el repositorio (1,05x), porque la mayor parte son los ZIM, que ya vienen comprimidos. Una copia sin cambios en los recursos solo agrega unos 5 MiB (config, dumps y dominio).
 - Si se reemplaza, se formatea igual (GPT, ext4 `kitbackup`) y se cambia `backup_disco_uuid`. El script de formateo revisa la serie antes de borrar.
 
-## Al conectarlo en la visita
+## Si se vuelve a conectar o se reemplaza
 
 1. Conectarlo a un puerto USB 3.0 de kit01.
 2. Confirmar en remoto con `lsblk -f`, que muestra `kitbackup` con el UUID de arriba.

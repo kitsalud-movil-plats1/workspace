@@ -457,3 +457,9 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Al crear el usuario de backups de las VMs, `backup` ya está en `/etc/passwd` (uid 34, `nologin`).
 - **Causa.** Es un usuario de sistema de Debian y Ubuntu para tareas de backup.
 - **Solución.** El rol `backup_origen` lo reutiliza y solo le cambia la shell a `/bin/sh`, que sshd necesita para ejecutar el comando forzado. Sigue sin contraseña y su llave está fuera de su home (`/etc/ssh/backup/authorized_keys`, de root).
+
+## `samba-tool domain backup restore` falla con `--newservername=dc01`
+
+- **Síntoma.** La restauración del backup del dominio termina con código 255 y una traza de `join_add_objects` en `samba/join.py`, después de `Adding CN=DC01,OU=Domain Controllers,DC=ad,DC=salud,DC=movil`.
+- **Causa.** `samba-tool` agrega el DC restaurado como un DC nuevo y quita las referencias a los anteriores, así que el nombre no puede ser uno que ya está en el backup.
+- **Solución.** Restaurar con otro nombre (`--newservername=dc02`) y volver a registrar `dc01` con las IP de clinica01 en el DNS de AD, para que la delegación de BIND9, el certificado LDAPS, Grafana y la consulta de formularios sigan usando `dc01.ad.salud.movil`. Si el dominio solo tiene lo que crea Ansible, es más directo aprovisionarlo otra vez con `playbooks/samba.yml` (E5, sección 5.4).
