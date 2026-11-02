@@ -482,3 +482,15 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Causa.** Es el código con que sale el proceso `samba` cuando lo detiene systemd; pasa en todas las paradas desde que se instaló.
 - **Solución.** Ninguna. Después de la parada, `samba-tool dbcheck` no encuentra errores y el servicio arranca normal.
 
+## `/tool fetch` de sw01 falla con HTTPS
+
+- **Síntoma.** Desde sw01, `/tool fetch url="https://10.20.20.11/..." check-certificate=no` termina con `failure: SSL: ssl: decode error (6)`, contra clinica01 y contra comunidad01, con Internet o sin él. Por HTTP funciona.
+- **Causa.** El cliente TLS de RouterOS no negocia con Caddy (certificados ECDSA de la CA del kit). Antes funcionaba, así que pudo cambiar con una actualización de alguno de los dos.
+- **Solución.** El HTTPS de las VMs se comprueba desde kit01 con `curl --cacert /etc/kitsalud/ca/raiz.crt --resolve <nombre>:443:<ip>`, y sw01 se usa solo para HTTP y TCP. El README del firewall de `network` todavía lo da como verificación.
+
+## `virsh list --all` sale vacío con el usuario de administración
+
+- **Síntoma.** En kit01, `virsh list --all` no muestra clinica01 ni comunidad01.
+- **Causa.** Sin `sudo`, virsh se conecta a `qemu:///session`, las máquinas del propio usuario, que no tiene ninguna. Las VMs del kit están en `qemu:///system`.
+- **Solución.** `virsh -c qemu:///system list --all` (el usuario está en el grupo `libvirt`, no hace falta `sudo`). El texto de ayuda del tablero **Estado del kit** todavía dice `virsh list --all`.
+

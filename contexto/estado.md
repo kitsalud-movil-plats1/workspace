@@ -1,6 +1,6 @@
 # Estado de implementación
 
-**Última actualización.** 2026-11-02, con la matriz de seguridad E4 (docs#10), después de la UPS lógica (platform#13), el disco USB, P11 y el plan de respaldo E5
+**Última actualización.** 2026-11-02, con P9 simulada en remoto, P13 y la revisión rápida (docs#11), después de la matriz de seguridad E4 y la UPS lógica
 
 Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 
@@ -13,6 +13,7 @@ Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 | Tablero, repositorios y permisos | ✅ | `main` protegida; equipo `integrantes` con escritura | [Project 1](https://github.com/orgs/kitsalud-movil-plats1/projects/1) |
 | Presentación de la entrega de diseño | ✅ | Expuesta el 19 de octubre; PDF de 41 diapositivas en `docs/sustentacion/entrega-diseno/` y fuente en Figma Slides | docs#9, PR docs#38 |
 | Matriz de seguridad (E4) | ✅ | `docs/seguridad/matriz-seguridad.md`, escrita desde lo aplicado. 25 flujos, las 79 reglas de nftables de kit01 una por fila (o por par v4/v6) con su justificación, `ufw` de las VMs, sw01 y ap01, puertos en escucha, administración remota, inventario de credenciales sin valores (se cambian todas antes de una misión real), protección de las copias y riesgos aceptados. Verificado el 2026-11-02 con `red-kit01.yml --check` sin diferencias, 69 flujos como se esperaba, conteo de reglas igual al ruleset activo y 0 secretos en el historial de los seis repositorios. Hallazgo sin cambiar: `sshd` con `X11Forwarding yes` y `MaxAuthTries 6` de fábrica. Los entregables se escriben sin códigos (D-xx, R-xx, F-xx) y sin remitir a otros documentos; E5 y la evidencia de P11 se ajustaron igual | docs#10, PR docs#56 |
+| Sin Internet y diagnóstico (P9, P13) | 🟡 | P9 simulada en remoto con `P09-sin-internet-remoto.sh`: tabla `inet prueba_sin_internet` (forward hacia la WAN y, en kit01, DNS externo salvo el del sitio, NTP y HTTP), borrado automático a los 15 min, NetBird intacto; 40 de 40 (DNS A/AAAA, Chrony, DHIS2 y consulta por HTTPS, SMB, biblioteca desde sw01, portal, biblioteca, videos, registro y un prerregistro desde `prueba01`, en v4 y v6). P13 con tres fallas (`named` detenido, `dhis2-db-1` detenido y comunidad01 apagada): detectadas, localizadas y restauradas. Con PostgreSQL caído la sonda de DHIS2 sigue en verde (la página responde). Revisión rápida en `docs/operacion/revision-rapida.md`, recorrida en seco. Falta que otro integrante ejecute la revisión rápida sin ayuda y P9 con el cable en la visita | docs#11, PR docs#57 |
 
 ## Equipos (primera sesión)
 
