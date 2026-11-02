@@ -63,6 +63,8 @@ Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, 
 
 Los bridges tienen STP apagado y `forward-delay` 0. El reenvío IPv4 e IPv6 está en `/etc/sysctl.d/60-kit01-router.conf`. El netplan está en `/etc/netplan/50-cloud-init.yaml` (copia en `network/kit01/netplan/`). En `/root/netplan-anterior/` está el netplan previo al último cambio, y en `/root/netplan-anterior/previo-network3/` el anterior a `br-com` y `br-srv`.
 
+`systemd-networkd-wait-online.service` quedó fallido en el último arranque (2026-10-09, cuando el equipo aún se llamaba `kitsalud-server`). Esperó los 2 minutos de su límite y salió con `Timeout occurred while waiting for network connectivity`. Hoy `enp171s0` queda en `carrier` sin dirección y `wt0` no lo gestiona networkd, así que en el próximo arranque probablemente vuelva a esperar 2 minutos y retrase lo que depende de `network-online.target`. Se revisa con P12 (platform#13).
+
 ## Firewall
 
 | Dato | Valor |
