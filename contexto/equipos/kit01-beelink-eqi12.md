@@ -63,7 +63,9 @@ Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, 
 
 Los bridges tienen STP apagado y `forward-delay` 0. El reenvío IPv4 e IPv6 está en `/etc/sysctl.d/60-kit01-router.conf`. El netplan está en `/etc/netplan/50-cloud-init.yaml` (copia en `network/kit01/netplan/`). En `/root/netplan-anterior/` está el netplan previo al último cambio, y en `/root/netplan-anterior/previo-network3/` el anterior a `br-com` y `br-srv`.
 
-`systemd-networkd-wait-online.service` quedó fallido en el último arranque (2026-10-09, cuando el equipo aún se llamaba `kitsalud-server`). Esperó los 2 minutos de su límite y salió con `Timeout occurred while waiting for network connectivity`. Hoy `enp171s0` queda en `carrier` sin dirección y `wt0` no lo gestiona networkd, así que en el próximo arranque probablemente vuelva a esperar 2 minutos y retrase lo que depende de `network-online.target`. Se revisa con P12 (platform#13).
+`systemd-networkd-wait-online.service` figura fallido por el último arranque (2026-10-09, cuando el equipo aún se llamaba `kitsalud-server` y no tenía el netplan del kit), en el que esperó 2 minutos. Ahora netplan le pone un drop-in (`/run/systemd/system/systemd-networkd-wait-online.service.d/10-netplan.conf`) con dos órdenes, una con el estado esperado de cada interfaz (`enp171s0:carrier`, `lan0.10:degraded`, ...) y otra con `--any -o routable`. Las dos terminan bien al instante (2026-11-02), así que en el próximo arranque no debería esperar.
+
+**UPS lógica (platform#13).** NUT con `dummy-ups` y `kit-apagado` (`platform/kit01/nut/`). `poweroff.target` no está enmascarado; para probar en remoto sin riesgo se usa el simulacro y, además, `systemctl mask --runtime poweroff.target halt.target` durante la prueba. Con la máscara, `systemctl poweroff` responde `Access denied`.
 
 ## Firewall
 
