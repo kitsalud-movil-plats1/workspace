@@ -494,3 +494,39 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Causa.** Sin `sudo`, virsh se conecta a `qemu:///session`, las máquinas del propio usuario, que no tiene ninguna. Las VMs del kit están en `qemu:///system`.
 - **Solución.** `virsh -c qemu:///system list --all` (el usuario está en el grupo `libvirt`, no hace falta `sudo`). El texto de ayuda del tablero **Estado del kit** todavía dice `virsh list --all`.
 
+
+## Ansible deja en el syslog las claves que se le pasan en un comando
+
+- **Síntoma.** En el equipo de destino, `/var/log/syslog` y el journal tienen líneas `ansible-ansible.legacy.command Invoked with _raw_params=...` con el comando completo. Si el comando lleva una clave del vault (`AP_CLAVE='{{ vault_ap01_password }}'`, `PASSWD='{{ vault_samba_usuarios_password }}'`), la clave queda en claro, y en las VMs además llega al log central de kit01 (`/var/log/kitsalud/<equipo>/syslog.log`).
+- **Causa.** Los módulos de Ansible registran sus argumentos en el syslog del destino, salvo los que el módulo marca como secretos. En `shell` y `command` todo el comando es un argumento normal.
+- **Solución.** Exportar `ANSIBLE_NO_TARGET_SYSLOG=True` antes de llamar a `ansible` cuando el comando lleve claves. Los scripts de `docs/pruebas` lo hacen en `comun.sh` y `network/ap/revisar-ap.sh` también. Las líneas que quedaron del 2026-11-02 y de las corridas anteriores de P9 siguen en kit01 y clinica01 hasta que roten o se limpien. Para comprobarlo sin que la búsqueda se registre a sí misma, buscar con un patrón que no coincida con su propio texto (`grep "AP_CLAV[E]='"`).
+
+## `tcp_abre` daba por bloqueada una IPv6 sin probarla
+
+- **Síntoma.** En `docs/pruebas/scripts`, `tcp_abre 6 fd5a:fc7e:d716:10::2 22` salía como bloqueado aunque kit01 no registraba ningún intento.
+- **Causa.** La función trataba como nombre todo lo que tuviera letras, y una IPv6 tiene letras de la a a la f. Intentaba resolverla, no obtenía nada y devolvía "no abre".
+- **Solución.** Lo que tiene `:` se usa como dirección. Con la corrección, el mismo intento queda en `firewall.log` con `fw-drop F-20`. Una prueba de bloqueo vale solo si el registro del firewall muestra el intento o si la misma función abre un puerto permitido de la misma familia.
+
+## Un script copiado a `/run` de kit01 no se ejecuta
+
+- **Síntoma.** `ansible kit01 -m shell -a "/run/script.sh"` falla con `Permission denied` (código 126) aunque el archivo tenga permiso de ejecución.
+- **Causa.** `/run` está montado con `noexec`.
+- **Solución.** Ejecutarlo con el intérprete, `bash /run/script.sh`.
+
+## sw01 no resuelve nombres
+
+- **Síntoma.** En sw01, `:resolve biblioteca.salud.movil` y `/tool fetch url="http://biblioteca.salud.movil/"` terminan con `failure: dns server failure`.
+- **Causa.** sw01 no tiene servidor DNS configurado (`/ip dns get servers` vacío). Además RouterOS 7.13 no acepta `type=ipv6` en `:resolve`, así que solo pide registros A.
+- **Solución.** Para pruebas, indicar el servidor en cada consulta, `:resolve biblioteca.salud.movil server=10.20.20.10` (también acepta `server=fd5a:fc7e:d716:20::10`), y usar la dirección en `/tool fetch` con la cabecera `Host`. El AAAA se consulta desde kit01 o desde un cliente.
+
+## `ssh` dentro de un `while read` se come la entrada del bucle
+
+- **Síntoma.** Un bucle `while read ...; do en_sw01 ...; done <<EOF` ejecuta solo la primera línea.
+- **Causa.** `ssh` lee la entrada estándar y consume el resto de las líneas del bucle.
+- **Solución.** `ssh -n`, que `en_sw01` ya usa.
+
+## El inicio de sesión del AP falla a veces después de cerrar otra sesión
+
+- **Síntoma.** Pedir `LoginRpm.htm?Save=Save` con la cookie correcta devuelve a veces la página que redirige al inicio, sin ruta de sesión, sobre todo justo después de un `LogoutRpm.htm`.
+- **Causa.** No está claro; el firmware 3.16.9 parece tardar en liberar la sesión anterior.
+- **Solución.** Reintentar hasta tres veces con 3 s de espera, como hace `network/ap/revisar-ap.sh`. Además el inicio de sesión necesita la cabecera `Referer` con la dirección del AP.
