@@ -51,6 +51,7 @@ Todo el trabajo sigue **SDD (Spec-Driven Development)**. Primero se escribe qué
 Reglas del SDD.
 
 - **La especificación manda.** Si al implementar resulta que el issue está mal o incompleto, se detiene, se comenta en el issue y se corrige la especificación antes de seguir.
+- **Criterios que se cumplen en remoto.** Un criterio de aceptación no depende de que otra persona ejecute algo ni de una visita. Lo que solo se puede ver en el sitio (celulares en el Wi-Fi, el cable de la WAN) va al guion de la sustentación, con un comando o un script simple, y en la tarjeta se verifica en remoto lo equivalente (por ejemplo, `prueba01` como cliente de la Comunidad o reiniciar una VM para P12).
 - **Micro-tareas verificables.** Una micro-tarea dura una hora o menos y termina con un comando cuya salida demuestra que funciona. Si la verificación falla, no se pasa a la siguiente.
 - **Decisiones explícitas.** Lo que no está en el documento de arquitectura se propone en el plan y se espera confirmación antes de implementarlo.
 - **Cierre del ciclo.** Una tarea no termina sin actualizar `contexto/`.
@@ -66,7 +67,7 @@ Reglas del SDD.
 7. **Documentar en el mismo PR.** README del componente (qué hace, cómo se despliega, cómo se verifica, cómo se diagnostica). Si cambia una dirección, un nombre, un flujo o una decisión, PR en `docs`. El documento describe el estado actual; no se mencionan correcciones ni retroalimentación.
 8. **Evidencia.** Salida real de las verificaciones en el PR; las pruebas P1-P13 además en `docs/evidencias/`.
 9. **Contexto.** PR en este repositorio que actualiza `contexto/estado.md` y, si aplica, la ficha del equipo o `contexto/problemas-conocidos.md`.
-10. **PR** con la plantilla de la organización y `Closes kitsalud-movil-plats1/<repo>#<numero>`. Moverlo a **In review** y pedir revisión a otro integrante. Al fusionar, **Done**, y pasar a **Ready** las tareas que ya no tengan bloqueos.
+10. **PR** con la plantilla de la organización y `Closes kitsalud-movil-plats1/<repo>#<numero>`. Moverlo a **In review** y pedir revisión. Al fusionar, **Done**, y pasar a **Ready** las tareas que ya no tengan bloqueos.
 
 ## 4. Contexto acumulado (`contexto/`)
 
@@ -92,7 +93,7 @@ El contexto **complementa** al documento de arquitectura. El diseño (qué y por
 
 ## 6. Trabajo remoto y cambios que pueden cortar el acceso
 
-kit01 y sw01 se configuran en remoto por NetBird (D-23 del documento). Solo se va al laboratorio para lo que no se puede probar de otra forma, como las pruebas con Wi-Fi y celulares, conectar el disco USB o el reinicio de P12. En kit01 (`nftables`, netplan, `sshd`) un error deja al equipo fuera, así que se siguen estos pasos.
+kit01 y sw01 se configuran en remoto por NetBird (D-23 del documento). Todo se prueba en remoto. Al laboratorio se va para la sustentación, donde lo que necesita el sitio (Wi-Fi y celulares, el cable de la WAN, el reinicio de kit01) se demuestra en vivo con comandos o scripts simples. En kit01 (`nftables`, netplan, `sshd`) un error deja al equipo fuera, así que se siguen estos pasos.
 
 - **Lo que no se toca.** `enp170s0` (WAN), NetBird y su configuración. Las NIC conservan los nombres del kernel (`wan0` es `enp170s0` y `lan0` es `enp171s0`, D-14).
 - **Antes.** Probar en el laboratorio virtual y validar con `netplan generate`, `nft -c -f <archivo>` y `sshd -t`. Guardar una copia del archivo que se va a cambiar.
@@ -121,4 +122,4 @@ kit01 y sw01 se configuran en remoto por NetBird (D-23 del documento). Solo se v
 - [ ] Ansible idempotente y verificado en IPv4 e IPv6.
 - [ ] README del componente y, si aplica, documento de arquitectura actualizados.
 - [ ] `contexto/` actualizado (estado, ficha del equipo, problemas conocidos).
-- [ ] PR aprobado por otro integrante y fusionado; tablero actualizado.
+- [ ] PR revisado y fusionado; tablero actualizado.
