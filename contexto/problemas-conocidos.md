@@ -439,3 +439,21 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** `/interface ethernet switch rule add ...` responde con error, así que no se puede filtrar el IPv6 hacia `ff02::1` (los RA) en el hardware.
 - **Causa.** Los dos chips de sw01 son Marvell 88E6191X, que en RouterOS 7.13 no aceptan reglas de switch (ACL). Y según cómo funciona RouterOS, con la conmutación por hardware el chip reparte el tráfico de un puerto sin pasar por la CPU, así que `/interface bridge filter` no lo ve.
 - **Solución.** `hw=no` en los puertos que se filtran (los de acceso, lista `acceso`), que pasan por la CPU, y la regla en `/interface bridge filter`. ether1 sigue por hardware. Que el contador de la regla suba con un RA real se comprueba en la visita (`network/switch/README.md`).
+
+## Un template de Ansible falla con `Missing end of comment tag`
+
+- **Síntoma.** `ansible.builtin.template` falla con `Syntax error in template: Missing end of comment tag` en un script de bash.
+- **Causa.** `${#arreglo[@]}` (longitud en bash) contiene `{#`, que Jinja toma como el inicio de un comentario.
+- **Solución.** Evitar `${#` en los templates (por ejemplo `[[ -n $variable ]]`) o envolver esa parte en `{% raw %}`.
+
+## `samba-tool domain backup offline` dice `Failed to open .../netlogon_creds_cli.tdb`
+
+- **Síntoma.** En el log del backup aparece `tdb_mutex_open_ok ... Can use mutexes only with MUTEX_LOCKING or NOLOCK` y `Failed to open /var/lib/samba/private/netlogon_creds_cli.tdb`.
+- **Causa.** Ese archivo es un caché de Samba abierto con mutex, y `tdbbackup` no lo puede copiar en caliente.
+- **Solución.** Ninguna; el resto del dominio se copia y el `.tar.bz2` sale completo. Samba vuelve a crear ese caché solo.
+
+## El usuario `backup` ya existe en Ubuntu
+
+- **Síntoma.** Al crear el usuario de backups de las VMs, `backup` ya está en `/etc/passwd` (uid 34, `nologin`).
+- **Causa.** Es un usuario de sistema de Debian y Ubuntu para tareas de backup.
+- **Solución.** El rol `backup_origen` lo reutiliza y solo le cambia la shell a `/bin/sh`, que sshd necesita para ejecutar el comando forzado. Sigue sin contraseña y su llave está fuera de su home (`/etc/ssh/backup/authorized_keys`, de root).
