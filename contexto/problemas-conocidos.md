@@ -530,3 +530,21 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Pedir `LoginRpm.htm?Save=Save` con la cookie correcta devuelve a veces la página que redirige al inicio, sin ruta de sesión, sobre todo justo después de un `LogoutRpm.htm`.
 - **Causa.** No está claro; el firmware 3.16.9 parece tardar en liberar la sesión anterior.
 - **Solución.** Reintentar hasta tres veces con 3 s de espera, como hace `network/ap/revisar-ap.sh`. Además el inicio de sesión necesita la cabecera `Referer` con la dirección del AP.
+
+## kit01 llega a las VMs desde `10.20.20.1` y no desde `.10`
+
+- **Síntoma.** Una llave con `from="10.20.20.10,fd5a:fc7e:d716:20::10"` en una VM rechaza la conexión de kit01 por IPv4 (`Permission denied (publickey,password)`).
+- **Causa.** `br-srv` tiene `10.20.20.1` (gateway de las VMs) y `10.20.20.10` (servicios). Hacia `10.20.20.11` y `.12` el kernel elige `src 10.20.20.1`, la primera dirección de la red. En IPv6 sale desde `fd5a:fc7e:d716:20::10`.
+- **Solución.** Aceptar las dos de cada familia en `from=` (`ip route get 10.20.20.12` en kit01 muestra cuál usa). El playbook de actualización lo hace con `redes.servidores.gw4` y `servicios_kit01`.
+
+## Un error de YAML en un `include_role` se salta el `always`
+
+- **Síntoma.** El play se detiene con `YAML parsing failed` y no ejecuta las tareas de `always` del bloque. En el playbook de actualización dejó el disco USB montado.
+- **Causa.** Los archivos de un `include_role` se leen al llegar a la tarea, y un error de sintaxis ahí corta el play entero. `ansible-playbook --syntax-check` no los revisa porque son dinámicos.
+- **Solución.** Validar cada archivo del rol antes de correr (`python3 -c "import yaml,sys; yaml.safe_load(open(sys.argv[1]))" <archivo>`). Si quedó montado, `sudo umount /mnt/backup` en kit01 antes de la copia del domingo, que no arranca con el disco montado.
+
+## Con BIND9 retenido, apt deja atrás sus bibliotecas
+
+- **Síntoma.** Después de `apt upgrade` en kit01 siguen pendientes `bind9-libs`, `bind9-utils`, `bind9-host` y `bind9-dnsutils`, que no están retenidos.
+- **Causa.** Dependen de la versión exacta de `bind9-libs` que usa `bind9`, y `bind9` está retenido, así que apt las deja atrás (`kept back`).
+- **Solución.** Ninguna; se actualizan junto con BIND9 cuando se decida actualizarlo (`apt-mark unhold bind9` y su prueba). El playbook las informa aparte de los retenidos.
