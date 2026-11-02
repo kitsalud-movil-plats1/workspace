@@ -2,7 +2,7 @@
 
 Ficha del punto de acceso del kit. Datos tomados de la etiqueta del equipo y de su interfaz web (firmware real), complementados con el manual de usuario del fabricante. El diseño de referencia está en `docs/arquitectura/00-punto-de-partida.md`, secciones 5.2 y 5.3.
 
-**Estado (2026-10-09).** Configurado en la primera sesión según la configuración objetivo y conectado a ether2 de sw01. La gestión se verificó desde kit01 en `10.20.10.3`; falta probar clientes en los SSID. La configuración aplicada está en `network/ap/README.md`.
+**Estado (2026-11-02).** Configurado según la configuración objetivo y conectado a ether2 de sw01. `network/ap/revisar-ap.sh` comprueba la configuración desde kit01 sin cambiar nada (17 de 17), y `prueba01` en la VLAN 40 recibe IPv4 e IPv6 y no llega a la gestión. Los clientes Wi-Fi reales se ven en la sustentación. La configuración aplicada está en `network/ap/README.md`.
 
 ## Identificación
 
@@ -98,3 +98,18 @@ Verificado el 2026-10-11 para leer el menú.
 - **Orden de las páginas.** Cada página se pide con `Referer` igual a `.../<SESIÓN>/userRpm/Index.htm`, y hay que cargar `Index.htm` antes de cualquier otra. Si no, el AP responde con un script que borra la cookie y redirige al inicio de sesión.
 - **Páginas del menú.** `SnmpRpm`, `DiagnosticRpm`, `SysRebootRpm`, `PingWatchDogRpm`, `SystemLogRpm`, `RestoreDefaultCfgRpm`, `ChangeLoginPwdRpm`, `BakNRestoreRpm`, `SoftwareUpgradeRpm`, `FixMapCfgRpm`, `AssignedIpAddrListRpm`, `LanDhcpServerRpm`, `NetworkCfgRpm`, `WlanThroughputRpm`, `WlanAdvRpm`, `WpsCfgRpm`, `WlanStationRpm`, `WlanMacFilterRpm`, `WlanSecurityRpm`, `WlanNetworkRpm`, `StatusRpm` y `WzdStartRpm`.
 - **Cierre.** Al terminar se cierra la sesión con `LogoutRpm.htm`.
+- **Referer en el inicio de sesión.** `LoginRpm.htm?Save=Save` también necesita `Referer: http://10.20.10.3/`. Sin él, o justo después de cerrar otra sesión, a veces devuelve el inicio sin ruta de sesión; se reintenta (verificado el 2026-11-02).
+- **Dónde está cada valor.** Cada página trae la configuración en arreglos de JavaScript que la propia interfaz usa para llenar el formulario (índices desde 0, verificados con el código de cada página el 2026-11-02).
+
+| Página | Arreglo e índice | Qué es |
+|---|---|---|
+| `WlanNetworkRpm` | `wlanPara[15]` | Modo de operación (1 es Multi-SSID) |
+| `WlanNetworkRpm` | `wlanPara[3]`, `[16]`, `[17]`, `[18]` | Nombres de SSID1 a SSID4 |
+| `WlanNetworkRpm` | `wlanPara[19]`, `[20]`, `[21]` | SSID2, SSID3 y SSID4 activos |
+| `WlanNetworkRpm` | `vlanPara[0]`, `[1]` a `[4]` | "Enable VLAN" y la VLAN de cada SSID |
+| `WlanAdvRpm` | `wlanAdv[7]` | AP Isolation (1 activado) |
+| `LanDhcpServerRpm` | `DHCPPara[0]` | Servidor DHCP (0 apagado) |
+| `WpsCfgRpm` | `wpsInf[0]` | WPS (0 apagado); `wpsInf[1]` es el PIN y no se imprime |
+| `SnmpRpm` | `snmpParam[0]` | Agente SNMP (0 apagado) |
+| `NetworkCfgRpm` | `lanPara[1]`, `[4]`, `[5]`, `[9]` | IP, tipo (0 fija), gateway y "Allow remote access" (0 marcado, 1 sin marcar) |
+| `StatusRpm` | `statusPara[5]`, `[6]` | Firmware y hardware |
