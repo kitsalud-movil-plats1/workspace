@@ -463,3 +463,22 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** La restauración del backup del dominio termina con código 255 y una traza de `join_add_objects` en `samba/join.py`, después de `Adding CN=DC01,OU=Domain Controllers,DC=ad,DC=salud,DC=movil`.
 - **Causa.** `samba-tool` agrega el DC restaurado como un DC nuevo y quita las referencias a los anteriores, así que el nombre no puede ser uno que ya está en el backup.
 - **Solución.** Restaurar con otro nombre (`--newservername=dc02`) y volver a registrar `dc01` con las IP de clinica01 en el DNS de AD, para que la delegación de BIND9, el certificado LDAPS, Grafana y la consulta de formularios sigan usando `dc01.ad.salud.movil`. Si el dominio solo tiene lo que crea Ansible, es más directo aprovisionarlo otra vez con `playbooks/samba.yml` (E5, sección 5.4).
+
+## Un drop-in de `nut-driver@kit` desaparece
+
+- **Síntoma.** Después de cambiar `ups.conf`, en el siguiente arranque `dummy-ups` falla con `Can't open /run/nut/kit.dev`, `upsmon` dice `UPS kit@localhost is unavailable` y el drop-in que creaba ese archivo ya no está en `/etc/systemd/system/nut-driver@kit.service.d/`.
+- **Causa.** `nut-driver-enumerator` vigila `ups.conf` y, al reconciliar, borra la carpeta de drop-in de cada instancia y la vuelve a crear solo con su `nut-driver-enumerator-generated-checksum.conf`.
+- **Solución.** Lo que debe pasar antes del driver va en una unidad propia (`kit-ups-inicial.service`, `Before=nut-driver@kit.service`), que el enumerador no toca.
+
+## Un simulacro de NUT termina apagando el equipo
+
+- **Síntoma.** El simulacro apaga las VMs y escribe `Simulacro terminado`, pero unos segundos después `kit-apagado` corre otra vez sin simulacro y apaga el host (visto en el laboratorio).
+- **Causa.** Al terminar, el simulacro reiniciaba el driver y `upsmon`, pero el archivo de estado seguía en `LB`. `upsmon` volvía a ver batería baja y ejecutaba `kit-apagado` de nuevo, ya sin el archivo de simulacro, que se había borrado.
+- **Solución.** `kit-apagado` pone la UPS en `OL` (`kit-ups ol`) antes de programar el reinicio de NUT. En el kit real, además, las pruebas se hacen con `poweroff.target` enmascarado (`--runtime`).
+
+## Samba AD termina con `status=127` al detenerse
+
+- **Síntoma.** En cada parada de `samba-ad-dc` (reinicio o apagado de clinica01), el journal muestra `Main process exited, code=exited, status=127/n/a` y a veces `Failed with result 'exit-code'`.
+- **Causa.** Es el código con que sale el proceso `samba` cuando lo detiene systemd; pasa en todas las paradas desde que se instaló.
+- **Solución.** Ninguna. Después de la parada, `samba-tool dbcheck` no encuentra errores y el servicio arranca normal.
+
