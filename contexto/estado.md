@@ -1,6 +1,6 @@
 # Estado de implementación
 
-**Última actualización.** 2026-11-02, con la UPS lógica y el apagado ordenado (platform#13), después del disco USB, P11 y el plan de respaldo E5 (platform#11 y platform#12)
+**Última actualización.** 2026-11-02, con la matriz de seguridad E4 (docs#10), después de la UPS lógica (platform#13), el disco USB, P11 y el plan de respaldo E5
 
 Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 
@@ -12,6 +12,7 @@ Leyenda ✅ hecho y verificado · 🟡 en curso · ⬜ pendiente
 | Diagramas | ✅ | draw.io, con el hardware real | `docs/diagramas/` |
 | Tablero, repositorios y permisos | ✅ | `main` protegida; equipo `integrantes` con escritura | [Project 1](https://github.com/orgs/kitsalud-movil-plats1/projects/1) |
 | Presentación de la entrega de diseño | ✅ | Expuesta el 19 de octubre; PDF de 41 diapositivas en `docs/sustentacion/entrega-diseno/` y fuente en Figma Slides | docs#9, PR docs#38 |
+| Matriz de seguridad (E4) | ✅ | `docs/seguridad/matriz-seguridad.md`, escrita desde lo aplicado. 25 flujos, las 79 reglas de nftables de kit01 una por fila (o por par v4/v6) con su justificación, `ufw` de las VMs, sw01 y ap01, puertos en escucha, administración remota, inventario de credenciales sin valores (se cambian todas antes de una misión real), protección de las copias y riesgos aceptados. Verificado el 2026-11-02 con `red-kit01.yml --check` sin diferencias, 69 flujos como se esperaba, conteo de reglas igual al ruleset activo y 0 secretos en el historial de los seis repositorios. Hallazgo sin cambiar: `sshd` con `X11Forwarding yes` y `MaxAuthTries 6` de fábrica. Los entregables se escriben sin códigos (D-xx, R-xx, F-xx) y sin remitir a otros documentos; E5 y la evidencia de P11 se ajustaron igual | docs#10, PR docs#56 |
 
 ## Equipos (primera sesión)
 
