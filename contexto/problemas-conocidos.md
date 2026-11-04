@@ -554,3 +554,9 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** `flatpak run com.jgraph.drawio.desktop -x ...` responde `input file/directory not found` con un `.drawio` que sí existe.
 - **Causa.** draw.io Desktop instalado por flatpak no ve `/tmp` ni rutas fuera del directorio personal.
 - **Solución.** Generar y exportar los diagramas dentro del directorio personal, por ejemplo en `docs/diagramas/` (`tools/build-diagrams.sh`).
+
+## Los eventos del dominio dejan de llegar al log central después de la rotación
+
+- **Síntoma.** `/var/log/samba/auth.log` de clinica01 tiene eventos nuevos, pero `/var/log/kitsalud/clinica01/auth.log` de kit01 no recibe ninguno con `samba-auth` desde la última rotación semanal.
+- **Causa.** La rotación de Samba usa `copytruncate`, que deja el archivo en 0 bytes con el mismo inodo. imfile seguía en el desplazamiento anterior y no leía hasta que el archivo volviera a pasar ese tamaño.
+- **Solución.** `reopenOnTruncate="on"` en el `input` de imfile (rol `comun`). Si el estado guardado ya quedó más allá del final del archivo, reiniciar rsyslog no basta. Hay que detener rsyslog (`systemctl stop syslog.socket rsyslog`), borrar `/var/spool/rsyslog/imfile-state:*` y arrancarlo, e imfile envía lo que faltaba. Se prueba con `logrotate -f /etc/logrotate.d/samba-auth` y un `kinit` con un usuario que no existe, para no sumar intentos fallidos a una cuenta real.
