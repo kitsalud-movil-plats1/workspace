@@ -560,3 +560,21 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** `/var/log/samba/auth.log` de clinica01 tiene eventos nuevos, pero `/var/log/kitsalud/clinica01/auth.log` de kit01 no recibe ninguno con `samba-auth` desde la última rotación semanal.
 - **Causa.** La rotación de Samba usa `copytruncate`, que deja el archivo en 0 bytes con el mismo inodo. imfile seguía en el desplazamiento anterior y no leía hasta que el archivo volviera a pasar ese tamaño.
 - **Solución.** `reopenOnTruncate="on"` en el `input` de imfile (rol `comun`). Si el estado guardado ya quedó más allá del final del archivo, reiniciar rsyslog no basta. Hay que detener rsyslog (`systemctl stop syslog.socket rsyslog`), borrar `/var/spool/rsyslog/imfile-state:*` y arrancarlo, e imfile envía lo que faltaba. Se prueba con `logrotate -f /etc/logrotate.d/samba-auth` y un `kinit` con un usuario que no existe, para no sumar intentos fallidos a una cuenta real.
+
+## Con comunidad01 apagada, clinica01 marca una unidad fallida
+
+- **Síntoma.** En el perfil "Solo clínica" aparece **UnidadFallida** de clinica01 en el tablero, además de las alertas de comunidad01.
+- **Causa.** `publicacion.timer` copia el recurso `contenido` a comunidad01 cada 10 minutos, y con comunidad01 apagada `rsync` falla (`did not see server greeting`, código 5).
+- **Solución.** En ese perfil, en clinica01, `systemctl disable --now publicacion.timer` y `systemctl reset-failed publicacion.service`. Al volver al perfil de referencia, `systemctl enable --now publicacion.timer`.
+
+## La contraseña anterior de una cuenta del dominio sigue sirviendo
+
+- **Síntoma.** Después de `samba-tool user setpassword`, la persona todavía entra a los recursos compartidos con la contraseña anterior.
+- **Causa.** Samba, como un dominio de Windows, acepta la contraseña anterior por NTLM durante 60 minutos (`old password allowed period`).
+- **Solución.** Es el comportamiento esperado. Para cortar el acceso de inmediato se deshabilita la cuenta (`samba-tool user disable`).
+
+## `curl` en kit01 no lee la raíz del kit sin `sudo`
+
+- **Síntoma.** `curl --cacert /etc/kitsalud/ca/raiz.crt` en kit01 falla con `error setting certificate file` (código 77) y responde `000`.
+- **Causa.** `/etc/kitsalud/ca` es solo de root, porque guarda la llave de la CA.
+- **Solución.** Ejecutar con `sudo` (o `-b` en Ansible), o descargar la raíz pública de `http://ca.salud.movil/raiz.crt`.
