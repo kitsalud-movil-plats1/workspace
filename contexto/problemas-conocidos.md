@@ -578,3 +578,27 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** `curl --cacert /etc/kitsalud/ca/raiz.crt` en kit01 falla con `error setting certificate file` (código 77) y responde `000`.
 - **Causa.** `/etc/kitsalud/ca` es solo de root, porque guarda la llave de la CA.
 - **Solución.** Ejecutar con `sudo` (o `-b` en Ansible), o descargar la raíz pública de `http://ca.salud.movil/raiz.crt`.
+
+## Ansible no entra a un kit01 nuevo con contraseña
+
+- **Síntoma.** El primer `ansible kit01 -m ping` desde una máquina de control nueva falla con `Using a SSH password instead of a key is not possible because Host Key checking is enabled`.
+- **Causa.** La clave de host de kit01 no está en `known_hosts` y Ansible no acepta claves nuevas cuando entra con contraseña. Las VMs no tienen el problema, porque el salto por kit01 usa `StrictHostKeyChecking=accept-new`.
+- **Solución.** Entrar una vez con `sshpass -f ~/.config/kitsalud/ssh-pass ssh -o StrictHostKeyChecking=accept-new kitsalud@<ip-netbird-de-kit01> hostname`. Está en la preparación de la guía de despliegue.
+
+## `red-kit01.yml` falla en un kit01 sin VMs ni Prometheus
+
+- **Síntoma.** En el primer despliegue, `red-kit01.yml` falla en "Sondas en rojo antes de aplicar" o, ya aplicado, en "Flujos en uso", y la restauración programada deja el firewall anterior.
+- **Causa.** El inventario del kit tiene `kit01_firewall_sondas: true` y dos comprobaciones desde clinica01 y comunidad01, que todavía no existen.
+- **Solución.** La primera vez, `-e kit01_firewall_sondas=false -e '{"kit01_firewall_comprobaciones": []}'`, igual que en el laboratorio virtual. Con todo desplegado se ejecuta sin los `-e`.
+
+## Ramas aplicadas en el kit que no están en `main`
+
+- **Síntoma.** `portal.yml --check` muestra cambios en kit01 que nadie hizo, o el `/export terse` de sw01 no coincide con `sw01.rsc`.
+- **Causa.** Una corrección se aplicó desde una rama local que no se subió ni se fusionó (pasó con `fix/8-portal-menu` y `fix/11-vlan40-cpu` de `network`, del 2026-10-30). Desplegar desde `main` deshace la corrección.
+- **Solución.** Subir la rama y abrir su PR en cuanto se aplica. Para encontrarlas, en cada repositorio `for b in $(git for-each-ref --format='%(refname:short)' refs/heads); do [ "$(git rev-list --count main..$b)" != 0 ] && echo $b; done` y `git ls-remote --heads origin <rama>`.
+
+## Wikimedia responde 429 al descargar los videos de Jellyfin
+
+- **Síntoma.** `comunidad01.yml` falla en "Originales para preparar" con `HTTP Error 429: Too many requests` en algunos videos, y repetirlo enseguida da el mismo error.
+- **Causa.** `upload.wikimedia.org` limita la dirección después de varias descargas grandes seguidas y responde con `Retry-After: 600`. El rol ya envía su propio agente (`jellyfin_agente`), así que no es un bloqueo por el agente. Pasó al reconstruir comunidad01 (2026-11-04).
+- **Solución.** Esperar 10 minutos y volver a ejecutar el playbook. Lo que ya bajó queda verificado por sha256 y no se descarga otra vez. Se ve con `curl -s -D - -o /dev/null <url> | grep -i retry-after`.
