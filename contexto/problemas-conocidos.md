@@ -548,3 +548,9 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Después de `apt upgrade` en kit01 siguen pendientes `bind9-libs`, `bind9-utils`, `bind9-host` y `bind9-dnsutils`, que no están retenidos.
 - **Causa.** Dependen de la versión exacta de `bind9-libs` que usa `bind9`, y `bind9` está retenido, así que apt las deja atrás (`kept back`).
 - **Solución.** Ninguna; se actualizan junto con BIND9 cuando se decida actualizarlo (`apt-mark unhold bind9` y su prueba). El playbook las informa aparte de los retenidos.
+
+## draw.io no encuentra el archivo al exportar
+
+- **Síntoma.** `flatpak run com.jgraph.drawio.desktop -x ...` responde `input file/directory not found` con un `.drawio` que sí existe.
+- **Causa.** draw.io Desktop instalado por flatpak no ve `/tmp` ni rutas fuera del directorio personal.
+- **Solución.** Generar y exportar los diagramas dentro del directorio personal, por ejemplo en `docs/diagramas/` (`tools/build-diagrams.sh`).
