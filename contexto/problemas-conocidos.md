@@ -602,3 +602,15 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** `comunidad01.yml` falla en "Originales para preparar" con `HTTP Error 429: Too many requests` en algunos videos, y repetirlo enseguida da el mismo error.
 - **Causa.** `upload.wikimedia.org` limita la dirección después de varias descargas grandes seguidas y responde con `Retry-After: 600`. El rol ya envía su propio agente (`jellyfin_agente`), así que no es un bloqueo por el agente. Pasó al reconstruir comunidad01 (2026-11-04).
 - **Solución.** Esperar 10 minutos y volver a ejecutar el playbook. Lo que ya bajó queda verificado por sha256 y no se descarga otra vez. Se ve con `curl -s -D - -o /dev/null <url> | grep -i retry-after`.
+
+## Un cambio de la zona RPZ tarda hasta un minuto en aplicarse
+
+- **Síntoma.** `rndc reload sin-internet.rpz` dice `loaded serial 2`, pero las consultas siguen sin la respuesta nueva durante casi un minuto.
+- **Causa.** BIND9 aplica los cambios de una zona de `response-policy` como máximo cada `min-update-interval`, que vale 60 s por defecto.
+- **Solución.** `response-policy { zone "sin-internet.rpz" min-update-interval 0; }`, como en el rol `bind9`. Sin Internet hace falta además `qname-wait-recurse no`, para que la respuesta no espere a los reenviadores caídos.
+
+## Flask sirve las fuentes `woff2` como `application/octet-stream`
+
+- **Síntoma.** `curl -w '%{content_type}' https://registro.salud.movil/static/fuentes/literata.woff2` responde `application/octet-stream`.
+- **Causa.** La imagen `python:slim` no trae el tipo de `.woff2` en `mimetypes`.
+- **Solución.** `mimetypes.add_type("font/woff2", ".woff2")` antes de crear la app, como en los formularios y la consulta. nginx y Caddy ya lo traen.
