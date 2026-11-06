@@ -614,3 +614,9 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** `curl -w '%{content_type}' https://registro.salud.movil/static/fuentes/literata.woff2` responde `application/octet-stream`.
 - **Causa.** La imagen `python:slim` no trae el tipo de `.woff2` en `mimetypes`.
 - **Solución.** `mimetypes.add_type("font/woff2", ".woff2")` antes de crear la app, como en los formularios y la consulta. nginx y Caddy ya lo traen.
+
+## Un archivo borrado del repositorio sigue en el equipo
+
+- **Síntoma.** Después de quitar un archivo de `paginas/`, `static/` o `publica/`, el playbook termina bien y el archivo viejo sigue en kit01 o en la VM. En las apps de Flask, además, entra a la imagen.
+- **Causa.** `ansible.builtin.copy` agrega y actualiza archivos, pero nunca borra lo que ya no está en el origen.
+- **Solución.** Borrarlo en el equipo antes de ejecutar el playbook, con la ruta exacta, como se hizo con las fuentes anteriores de las páginas (2026-11-05).
