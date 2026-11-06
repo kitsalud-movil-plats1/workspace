@@ -626,3 +626,12 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** En el PDF, la primera columna de una tabla sale en negrita, y con texto largo se ve como un bloque pesado.
 - **Causa.** `tools/pdf-style.css` pone en negrita `td:first-child`, pensado para columnas cortas.
 - **Solución.** Envolver la tabla en `<div class="texto-normal">`, con líneas en blanco antes y después.
+
+## Clientes Wi-Fi sin respuesta por IPv6 hasta hablar directo con kit01
+
+- **Síntoma.** Desde un cliente Wi-Fi real, `P02-dns.sh` falla en `dig` al DNS del kit por IPv6 y en `curl -6` (código 000), con IPv4 bien. Después de un `ping6` a la dirección de kit01 en la misma red, todo pasa. En `ip -6 neigh` la dirección global del cliente sale `FAILED`.
+- **Causa.** kit01 resuelve la dirección global con una solicitud multicast (`ff02::1:ffXX:XXXX`). kit01 la envía y sw01 la saca por `ether2`, pero ningún cliente responde. Con la MAC cargada a mano, el unicast funciona. El ping previo lo arregla porque el cliente envía una solicitud con su dirección global y kit01 lo aprende. No se pudo observar el radio, así que no se sabe si la descarta ap01 o el cliente.
+- **Por qué no se vio antes.** `prueba01` está conectada a `br-com` sin pasar por sw01 ni por el AP, y las pruebas remotas usaron ese camino.
+- **Solución.** Servicio `kit-vecinos` (network#39), que aprende dirección y MAC del tráfico entrante. Convertir las solicitudes en broadcast con nftables no sirvió: el kit las envió y nadie respondió. Un socket ligado a IPv6 no recibe en un puerto de bridge, hay que usar `ETH_P_ALL`.
+- **Cuidado.** Un ping a `ff02::1` no demuestra nada: los clientes no responden, y las respuestas que se ven en `lan0.40` pueden ser de kit01 hacia un cliente.
+

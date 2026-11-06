@@ -15,6 +15,8 @@ Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, 
 | Red | Dos puertos Ethernet de 1 GbE (`wan0` hacia el RB3011, `lan0` trunk hacia sw01); Wi-Fi 6 y Bluetooth integrados, sin uso |
 | Alimentación | Fuente interna de 85 W, 100-240 V, 1,9 A |
 | Consumo de referencia | ≈ 20 W en reposo, ≈ 60 W a plena carga |
+| Memoria física | Dos módulos DDR4 de 8 GB a 3200 MT/s; `dmidecode` reporta 2 ranuras y máximo de 64 GB (2026-11-06) |
+| Medición de consumo | RAPL (`/sys/class/powercap/intel-rapl:0`) marca 0,6 W de paquete en reposo con las dos VMs (2026-11-06). Sin sensor de entrada, así que el consumo en el enchufe solo se mide con un vatímetro |
 | Sistema | Ubuntu Server 24.04 LTS (venía con Windows 11 Pro) |
 
 ## Datos verificados (2026-10-09 y 2026-10-10)
