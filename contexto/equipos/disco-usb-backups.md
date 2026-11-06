@@ -1,6 +1,6 @@
 # Disco USB de backups
 
-Ficha del disco externo donde kit01 guarda el repositorio de restic. El diseño de referencia está en `docs/arquitectura/00-punto-de-partida.md`, R11, D-10 y sección 10.6, y el componente en `platform/backups/`.
+Ficha del disco externo donde kit01 guarda el repositorio de restic. El diseño de referencia está en `docs/arquitectura/documento-arquitectura.md`, R11, D-10 y sección 10.6, y el componente en `platform/backups/`.
 
 **Estado (2026-11-02).** Conectado a kit01 desde el 2026-10-30 a las 12:43, en el bus USB 3.0 (`4-1`). El repositorio de restic se creó con la primera copia de ese día. Tiene los snapshots del 2026-10-30, del 2026-11-01 (programado), del 2026-11-02 (P11) y la copia manual antes de actualizar del mismo día, y ocupa unos 850 MiB. Desde el 2026-11-02 guarda además en `imagenes/<vm>/` las imágenes Docker de las dos VMs (`docker save` comprimido, `SHA256SUMS` e `imagenes.txt`), unos 1,5 GB, que el playbook de actualización reemplaza en cada corrida.
 

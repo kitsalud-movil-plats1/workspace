@@ -620,3 +620,9 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Síntoma.** Después de quitar un archivo de `paginas/`, `static/` o `publica/`, el playbook termina bien y el archivo viejo sigue en kit01 o en la VM. En las apps de Flask, además, entra a la imagen.
 - **Causa.** `ansible.builtin.copy` agrega y actualiza archivos, pero nunca borra lo que ya no está en el origen.
 - **Solución.** Borrarlo en el equipo antes de ejecutar el playbook, con la ruta exacta, como se hizo con las fuentes anteriores de las páginas (2026-11-05).
+
+## Quitar la columna de código deja una tabla entera en negrita
+
+- **Síntoma.** En el PDF, la primera columna de una tabla sale en negrita, y con texto largo se ve como un bloque pesado.
+- **Causa.** `tools/pdf-style.css` pone en negrita `td:first-child`, pensado para columnas cortas.
+- **Solución.** Envolver la tabla en `<div class="texto-normal">`, con líneas en blanco antes y después.

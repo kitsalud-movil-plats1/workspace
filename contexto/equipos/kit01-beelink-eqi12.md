@@ -1,6 +1,6 @@
 # kit01, Beelink EQi12
 
-Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, Chrony, portal) e hipervisor de `clinica01` y `comunidad01`. El diseño de referencia está en `docs/arquitectura/00-punto-de-partida.md`, D-02, D-04, D-14 y sección 6.
+Ficha del mini PC del kit, que es router/firewall (nftables, Kea, radvd, BIND9, Chrony, portal) e hipervisor de `clinica01` y `comunidad01`. El diseño de referencia está en `docs/arquitectura/documento-arquitectura.md`, D-02, D-04, D-14 y sección 6.
 
 **Estado (2026-10-10).** Ubuntu Server instalado y actualizado, hostname `kit01`, SSH sin root, KVM/libvirt instalado, NetBird conectado y VLAN de gestión hacia sw01 funcionando. La red interna (`network#3`) y el firewall base (`network#4`) están aplicados. Queda pendiente el arranque con el kernel nuevo (P12).
 
