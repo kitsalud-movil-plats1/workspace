@@ -1,6 +1,6 @@
 # ap01, TP-Link TL-WA801ND v3
 
-Ficha del punto de acceso del kit. Datos tomados de la etiqueta del equipo y de su interfaz web (firmware real), complementados con el manual de usuario del fabricante. El diseño de referencia está en `docs/arquitectura/00-punto-de-partida.md`, secciones 5.2 y 5.3.
+Ficha del punto de acceso del kit. Datos tomados de la etiqueta del equipo y de su interfaz web (firmware real), complementados con el manual de usuario del fabricante. El diseño de referencia está en `docs/arquitectura/documento-arquitectura.md`, secciones 5.2 y 5.3.
 
 **Estado (2026-11-02).** Configurado según la configuración objetivo y conectado a ether2 de sw01. `network/ap/revisar-ap.sh` comprueba la configuración desde kit01 sin cambiar nada (17 de 17), y `prueba01` en la VLAN 40 recibe IPv4 e IPv6 y no llega a la gestión. Los clientes Wi-Fi reales se ven en la sustentación. La configuración aplicada está en `network/ap/README.md`.
 

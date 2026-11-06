@@ -6,7 +6,7 @@ Estas reglas aplican a cualquier persona o agente (Claude Code, Codex, Copilot, 
 
 **Kit móvil de atención primaria en salud** (Plataformas I, 2026-2). Un mini PC (`kit01`, Beelink EQi12) es router/firewall e hipervisor de dos VMs (`clinica01`, `comunidad01`), con un MikroTik CCR2004 usado como switch (`sw01`) y un AP TP-Link TL-WA801ND (`ap01`).
 
-- **Fuente de la verdad.** `docs/arquitectura/00-punto-de-partida.md`. Las direcciones, nombres, puertos, flujos y decisiones salen de ahí.
+- **Fuente de la verdad.** `docs/arquitectura/documento-arquitectura.md`. Las direcciones, nombres, puertos, flujos y decisiones salen de ahí.
 - **Tablero.** <https://github.com/orgs/kitsalud-movil-plats1/projects/1>. Cada issue es la especificación de una tarea.
 - **Contexto acumulado.** Está en `contexto/` de este repositorio, con el estado de lo implementado, fichas de los equipos y problemas conocidos (sección 4).
 

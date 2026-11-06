@@ -1,6 +1,6 @@
 # Contexto acumulado
 
-Hechos operativos que se van confirmando al resolver tareas, es decir, cómo están los equipos y qué está hecho. El diseño (qué y por qué) vive en `docs/arquitectura/00-punto-de-partida.md`; aquí no se repite.
+Hechos operativos que se van confirmando al resolver tareas, es decir, cómo están los equipos y qué está hecho. El diseño (qué y por qué) vive en `docs/arquitectura/documento-arquitectura.md`; aquí no se repite.
 
 | Archivo | Contenido |
 |---|---|
