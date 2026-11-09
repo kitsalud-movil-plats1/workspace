@@ -635,3 +635,18 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Solución.** Servicio `kit-vecinos` (network#39), que aprende dirección y MAC del tráfico entrante. Convertir las solicitudes en broadcast con nftables no sirvió: el kit las envió y nadie respondió. Un socket ligado a IPv6 no recibe en un puerto de bridge, hay que usar `ETH_P_ALL`.
 - **Cuidado.** Un ping a `ff02::1` no demuestra nada: los clientes no responden, y las respuestas que se ven en `lan0.40` pueden ser de kit01 hacia un cliente.
 
+## Dos clientes del Wi-Fi de la Comunidad se hacen ping
+
+- **Síntoma.** Desde un PC en `SaludMovil-Comunidad`, el ping a un celular del mismo SSID responde, aunque P3 esperaba que no.
+- **Causa.** El firmware 3.16.9 del AP en modo Multi-SSID solo aplica AP Isolation al SSID1. El ajuste está activado (`wlanAdv[7]=1`), sin reinicio pendiente ni modo puente. sw01 aprende las dos MAC en `ether2-ap01` y kit01 no ve el ICMP (`conntrack`, `br-com` con hairpin apagado), así que el AP pasa la trama de un cliente al otro. En `SaludMovil-Clinica`, con los mismos dos equipos, el ARP entre ellos falla y kit01 sí llega a los dos.
+- **Por qué no se vio antes.** P3 se aprobó con `prueba01`, que está en `br-com` y no pasa por el AP.
+- **Solución.** No tiene. Reiniciar el AP y apagar y encender el ajuste no cambió nada. Queda como riesgo aceptado en el documento de arquitectura (secciones 5.3 y 14), P3 ya no espera que el ping falle y la mejora es un AP que aísle cada SSID. Invertir el orden de los SSID no se hizo, porque la gestión del AP va por la VLAN del SSID1.
+- **Cuidado.** El DHCP snooping y el filtro de RA de sw01 no protegen a un cliente de la Comunidad frente a otro, porque ese tráfico no llega a sw01.
+
+## comunidad01 se queda apagada después de `virsh reboot`
+
+- **Síntoma.** En P12, después de `virsh reboot` a las dos VMs, clinica01 vuelve y comunidad01 queda `shut off (shutdown)`, con 14 problemas en Grafana (las sondas y el exporter de comunidad01 y `publicacion.service` de clinica01).
+- **Causa.** Las VMs no tienen `qemu-guest-agent`, así que `virsh reboot` usa ACPI (`Power key pressed short` en la VM) y libvirt la vuelve a arrancar. El proceso de QEMU de comunidad01 venía corriendo con el ISO de cloud-init de la instalación conectado, y ese ISO ya no existía en `/var/lib/libvirt/boot/`. libvirtd falló con `Unable to get XATTR trusted.libvirt.security.ref_dac on .../virtinst-...-cloudinit.iso` y terminó el proceso sin volver a arrancarlo. clinica01 no tenía el ISO en su proceso.
+- **Solución.** `virsh -c qemu:///system start comunidad01`, que arranca desde la configuración guardada, ya sin el ISO. `autostart` no sirve aquí, porque solo actúa cuando arranca kit01. `publicacion.service` se recupera solo en la siguiente pasada del timer.
+- **Cómo revisarlo.** `virsh domblklist <vm>` muestra la configuración guardada; lo que usa el proceso que corre está en la línea de QEMU de `/var/log/libvirt/qemu/<vm>.log` (con `sudo`).
+

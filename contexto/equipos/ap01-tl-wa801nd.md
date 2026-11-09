@@ -56,7 +56,7 @@ Los modos de operación son Access Point, **Multi-SSID**, Client, WDS Repeater, 
 - Hasta **4 SSID**, cada uno con su **VLAN ID** (1-4094) al activar **Enable VLAN**.
 - Con VLAN activa, todo el tráfico que sale por el puerto LAN va **etiquetado** (802.1Q) con la VLAN del SSID del cliente. No hay un SSID sin etiqueta.
 - **Gestión (comprobado en el laboratorio).** La gestión **recibe** tramas etiquetadas en la VLAN del **SSID1** pero **responde sin etiqueta**. Por eso el puerto del switch tiene que aceptar tramas sin etiqueta y meterlas en la VLAN 10 (ether2 híbrido, PVID 10). La ayuda de la interfaz no lo decía. Los clientes inalámbricos de cualquier SSID también pueden llegar a la página de gestión (R-12).
-- Los clientes de SSID con VLAN distinta no se comunican entre sí; con **AP Isolation**, tampoco los del mismo SSID.
+- Los clientes de SSID con VLAN distinta no se comunican entre sí. **AP Isolation** solo aísla a los clientes del **SSID1**; los del SSID2 se alcanzan entre sí aunque el ajuste esté activado (comprobado el 2026-11-09, ver `problemas-conocidos.md`).
 - El manual de la versión 2 dice que un SSID con VLAN ID 1 sale sin etiqueta; **no se usa** porque la interfaz real del firmware 3.16.9 describe la gestión en la VLAN del SSID1.
 
 ## Configuración objetivo del kit
@@ -89,7 +89,7 @@ Los modos de operación son Access Point, **Multi-SSID**, Client, WDS Repeater, 
 
 - Solo 2,4 GHz y puerto de 100 Mb/s, que lo hacen el cuello de botella del kit (R-13).
 - Sin WPA3; gestión solo por HTTP e IPv4; sin syslog remoto (el registro se consulta en su página).
-- AP Isolation es global (aplica a todos los SSID).
+- AP Isolation es un solo ajuste para todo el AP, pero en Multi-SSID solo actúa en el SSID1 (`SaludMovil-Clinica`). En `SaludMovil-Comunidad` dos clientes se hacen ping, y ese tráfico no llega a sw01 ni a kit01. Reiniciar el AP y apagar y encender el ajuste no lo cambia.
 
 ## Acceso a la interfaz por HTTP desde kit01 (sin navegador)
 
@@ -98,6 +98,8 @@ Verificado el 2026-10-11 para leer el menú.
 - **Orden de las páginas.** Cada página se pide con `Referer` igual a `.../<SESIÓN>/userRpm/Index.htm`, y hay que cargar `Index.htm` antes de cualquier otra. Si no, el AP responde con un script que borra la cookie y redirige al inicio de sesión.
 - **Páginas del menú.** `SnmpRpm`, `DiagnosticRpm`, `SysRebootRpm`, `PingWatchDogRpm`, `SystemLogRpm`, `RestoreDefaultCfgRpm`, `ChangeLoginPwdRpm`, `BakNRestoreRpm`, `SoftwareUpgradeRpm`, `FixMapCfgRpm`, `AssignedIpAddrListRpm`, `LanDhcpServerRpm`, `NetworkCfgRpm`, `WlanThroughputRpm`, `WlanAdvRpm`, `WpsCfgRpm`, `WlanStationRpm`, `WlanMacFilterRpm`, `WlanSecurityRpm`, `WlanNetworkRpm`, `StatusRpm` y `WzdStartRpm`.
 - **Cierre.** Al terminar se cierra la sesión con `LogoutRpm.htm`.
+- **Reinicio.** `SysRebootRpm.htm?Reboot=Reboot` con `Referer` igual a `.../SysRebootRpm.htm`. El AP vuelve a responder al ping en unos 35-45 s y los clientes se desconectan (verificado el 2026-11-09).
+- **Guardar Wireless Advanced.** El formulario se envía por GET a `WlanAdvRpm.htm` con `Referer` igual a `.../WlanAdvRpm.htm` y todos los campos, como lo hace el navegador: `txPower=0&beaconPeriod=100&rtsThreshold=2346&dtimInterval=1&wmm=2&shortGI=2&apisolation=2&Save=Save`. `fragThreshold` no se envía porque en 11bgn mixed está deshabilitado, y sin `apisolation` el aislamiento queda apagado. Antes de guardar se lee `wlanAdv` y se comprueba que los demás valores sean los de la tabla (verificado el 2026-11-09).
 - **Referer en el inicio de sesión.** `LoginRpm.htm?Save=Save` también necesita `Referer: http://10.20.10.3/`. Sin él, o justo después de cerrar otra sesión, a veces devuelve el inicio sin ruta de sesión; se reintenta (verificado el 2026-11-02).
 - **Dónde está cada valor.** Cada página trae la configuración en arreglos de JavaScript que la propia interfaz usa para llenar el formulario (índices desde 0, verificados con el código de cada página el 2026-11-02).
 
@@ -108,6 +110,8 @@ Verificado el 2026-10-11 para leer el menú.
 | `WlanNetworkRpm` | `wlanPara[19]`, `[20]`, `[21]` | SSID2, SSID3 y SSID4 activos |
 | `WlanNetworkRpm` | `vlanPara[0]`, `[1]` a `[4]` | "Enable VLAN" y la VLAN de cada SSID |
 | `WlanAdvRpm` | `wlanAdv[7]` | AP Isolation (1 activado) |
+| `WlanAdvRpm` | `wlanAdv[8]` | Hay un cambio que espera reinicio (1 sí) |
+| `WlanAdvRpm` | `wlanAdv[9]` | Modo puente activo, que deshabilita AP Isolation (0 en el kit) |
 | `LanDhcpServerRpm` | `DHCPPara[0]` | Servidor DHCP (0 apagado) |
 | `WpsCfgRpm` | `wpsInf[0]` | WPS (0 apagado); `wpsInf[1]` es el PIN y no se imprime |
 | `SnmpRpm` | `snmpParam[0]` | Agente SNMP (0 apagado) |
