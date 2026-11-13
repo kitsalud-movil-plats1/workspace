@@ -635,3 +635,9 @@ Cada entrada sigue el formato síntoma → causa → solución. Se agrega una en
 - **Solución.** Servicio `kit-vecinos` (network#39), que aprende dirección y MAC del tráfico entrante. Convertir las solicitudes en broadcast con nftables no sirvió: el kit las envió y nadie respondió. Un socket ligado a IPv6 no recibe en un puerto de bridge, hay que usar `ETH_P_ALL`.
 - **Cuidado.** Un ping a `ff02::1` no demuestra nada: los clientes no responden, y las respuestas que se ven en `lan0.40` pueden ser de kit01 hacia un cliente.
 
+
+## Kea deja de repartir direcciones después de reiniciarse sin enlace
+
+- **Síntoma.** Un cliente de la Comunidad (por ejemplo `prueba01`) recibe IPv6 por SLAAC pero no IPv4, y `dhcp.log` muestra `DHCPSRV_OPEN_SOCKET_FAIL ... the interface br-com is not running` seguido de `DHCP4_OPEN_SOCKETS_FAILED maximum number of open service sockets attempts: 12, has been exhausted`.
+- **Causa.** Kea abre sus sockets al arrancar y reintenta 12 veces. Si en ese momento `br-com` y `lan0.10` no tienen enlace (trunk hacia sw01 desconectado y ninguna VM en `br-com`), se rinde y no vuelve a intentarlo aunque el enlace aparezca después. Pasó el 2026-11-13 con `enp171s0` en NO-CARRIER.
+- **Solución.** Cuando vuelve el enlace, `sudo systemctl restart kea-dhcp4-server kea-dhcp6-server` en kit01 y comprobar en `dhcp.log` que solo falla la interfaz que sigue sin enlace. radvd no tiene este problema.
